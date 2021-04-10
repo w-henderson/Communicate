@@ -1,7 +1,7 @@
 import React from "react";
 import '../styles/ConversationHeader.scss';
 
-import Icon from '../components/Icon';
+import Icon from './Icon';
 
 interface ConversationHeaderProps {
   recipientUser: User | null

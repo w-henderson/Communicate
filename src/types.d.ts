@@ -12,5 +12,12 @@ interface Message {
 
 interface Chat {
   recipient: User,
+  id: string,
   mostRecentMessage: Message
+}
+
+interface FullChat {
+  recipient: User,
+  id: string,
+  messages: Message[]
 }

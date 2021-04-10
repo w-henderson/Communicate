@@ -1,6 +1,5 @@
 import React from "react";
 import humanize from '../DateHumanizer';
-import '../styles/Chats.scss';
 
 interface ChatPreviewProps {
   chat: Chat
