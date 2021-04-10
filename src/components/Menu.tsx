@@ -12,8 +12,8 @@ class Menu extends React.Component<MenuProps> {
       <div className="Menu">
         <img src={this.props.user?.profilePicture} alt="Profile picture" />
         <div>
-          <Icon>chat</Icon>
-          <Icon>settings</Icon>
+          <Icon>chat-dots-fill</Icon>
+          <Icon>gear-fill</Icon>
         </div>
       </div>
     );

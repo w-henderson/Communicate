@@ -1,0 +1,35 @@
+div.ConversationHeader {
+  grid-row: 1;
+  grid-column: 2;
+
+  background-color: var(--light);
+  border-left: 1px solid var(--mid);
+  border-bottom: 1px solid var(--mid);
+
+  padding: 16px;
+  display: flex;
+  place-items: center;
+
+  img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50px;
+  }
+
+  span {
+    flex: 1;
+    margin-left: 16px;
+    font-size: 16px;
+  }
+
+  i {
+    font-size: 28px !important;
+    color: var(--accent);
+    opacity: 0.4;
+    transition: opacity 100ms;
+    &:hover { opacity: 0.6; }
+
+    cursor: pointer;
+    user-select: none;
+  }
+}

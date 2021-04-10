@@ -9,13 +9,15 @@ div.App {
 
   display: grid;
   grid-template-columns: 30% 70%;
-  grid-template-rows: 80px 1fr;
+  grid-template-rows: 72px 1fr;
+
+  border: 1px solid var(--mid);
 
   @media only screen and (max-width: 1350px) {
-    max-height: unset;
+    max-height: calc(100% - 48px);
   }
 
   @media only screen and (max-height: 800px) {
-    max-width: unset;
+    max-width: calc(100% - 48px);
   }
 }
