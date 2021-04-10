@@ -10,7 +10,7 @@ class Menu extends React.Component<MenuProps> {
   render() {
     return (
       <div className="Menu">
-        <img src={this.props.user?.profilePicture} alt="Profile picture" />
+        <img src={this.props.user?.profilePicture} alt="Profile" />
         <div>
           <Icon>chat-dots-fill</Icon>
           <Icon>gear-fill</Icon>

@@ -1,8 +1,27 @@
 div.Chats {
   grid-row: 2;
   grid-column: 1;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+    
+  &::-webkit-scrollbar-track { 
+    background-color: var(--light);
+    border-radius: 0px;
+  }
+    
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--mid);
+    border-radius: 0px;
+
+    &:hover { background-color: var(--dark); }
+    &:active { background-color: var(--darker); }
+  }
 
   div.ChatPreview {
+    position: relative;
     height: 92px;
     padding: 16px;
     width: 100%;
@@ -11,7 +30,7 @@ div.Chats {
     transition: background-color 150ms, border-bottom 150ms;
     cursor: pointer;
     
-    &:hover { 
+    &:hover, &.active { 
       background-color: var(--light);
       border-bottom: 1px solid var(--mid);
     }
@@ -38,7 +57,8 @@ div.Chats {
 
     span.unreadBubble {
       position: absolute;
-      transform: translate(40px, 40px);
+      top: 54px;
+      left: 54px;
 
       display: block;
       width: 24px;
@@ -56,6 +76,10 @@ div.Chats {
       font-weight: 200;
       align-self: end;
       margin-left: 16px;
+
+      &.unread {
+        font-weight: 400;
+      }
     }
 
     span.messageDate {

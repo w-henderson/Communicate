@@ -9,7 +9,8 @@ import Chats from './components/Chats';
 
 interface AppState {
   user: User | null,
-  chats: Chat[]
+  chats: Chat[],
+  activeChat: FullChat
 };
 
 class App extends React.Component<{}, AppState> {
@@ -22,20 +23,40 @@ class App extends React.Component<{}, AppState> {
     };
 
     // Set a virtual message for debugging before we add FBRTDB
+    let chat = {
+      recipient: user,
+      id: "bd18e35b-961e-4393-95e3-36c7bc59f2f5",
+      mostRecentMessage: {
+        content: "This is an example message",
+        sender: user,
+        timestamp: 1617794712076,
+        readUsers: [user]
+      }
+    };
+
+    let message = {
+      content: "This is an example message 2",
+      sender: user,
+      timestamp: 1617894712076,
+      readUsers: [user]
+    };
+
+    let otherChat = {
+      recipient: user,
+      id: "bd18e35b-961e-4393-95e3-36c7bc59f2f6",
+      mostRecentMessage: message
+    };
+
     this.setState({
       user,
       chats: [
-        {
-          recipient: user,
-          id: "bd18e35b-961e-4393-95e3-36c7bc59f2f5",
-          mostRecentMessage: {
-            content: "This is an example message",
-            sender: user,
-            timestamp: 1617794712076,
-            readUsers: []
-          }
-        }
-      ]
+        otherChat, chat, chat, chat, chat, chat, chat, chat, chat, chat
+      ],
+      activeChat: {
+        recipient: user,
+        id: "bd18e35b-961e-4393-95e3-36c7bc59f2f6",
+        messages: [message]
+      }
     });
   }
 
@@ -44,8 +65,8 @@ class App extends React.Component<{}, AppState> {
       return (
         <div className="App">
           <Menu user={this.state.user} />
-          <ConversationHeader recipientUser={this.state.user} />
-          <Chats chats={this.state.chats} user={this.state.user} />
+          <ConversationHeader recipientUser={this.state.activeChat.recipient} />
+          <Chats chats={this.state.chats} user={this.state.user} activeID={this.state.activeChat.id} />
           <Conversation />
         </div>
       );

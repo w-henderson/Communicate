@@ -4,7 +4,8 @@ import '../styles/Chats.scss';
 
 interface ChatsProps {
   user: User | null,
-  chats: Chat[]
+  chats: Chat[],
+  activeID: string
 }
 
 class Chats extends React.Component<ChatsProps> {
@@ -12,7 +13,7 @@ class Chats extends React.Component<ChatsProps> {
     return (
       <div className="Chats">
         {this.props.chats.map((value, index) =>
-          <ChatPreview chat={value} user={this.props.user} key={index} />
+          <ChatPreview chat={value} user={this.props.user} key={index} active={this.props.activeID === value.id} />
         )}
       </div>
     );

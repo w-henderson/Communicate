@@ -12,7 +12,7 @@ class ConversationHeader extends React.Component<ConversationHeaderProps> {
     if (this.props.recipientUser !== null) {
       return (
         <div className="ConversationHeader">
-          <img src={this.props.recipientUser.profilePicture} alt="Recipient profile picture" />
+          <img src={this.props.recipientUser.profilePicture} alt="Recipient profile" />
           <span>{this.props.recipientUser.name}</span>
           <Icon>three-dots-vertical</Icon>
         </div>
