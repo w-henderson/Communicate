@@ -31,7 +31,8 @@ class App extends React.Component<{}, AppState> {
           mostRecentMessage: {
             content: "This is an example message",
             sender: user,
-            timestamp: 1617794712076
+            timestamp: 1617794712076,
+            readUsers: []
           }
         }
       ]
@@ -44,7 +45,7 @@ class App extends React.Component<{}, AppState> {
         <div className="App">
           <Menu user={this.state.user} />
           <ConversationHeader recipientUser={this.state.user} />
-          <Chats chats={this.state.chats} />
+          <Chats chats={this.state.chats} user={this.state.user} />
           <Conversation />
         </div>
       );

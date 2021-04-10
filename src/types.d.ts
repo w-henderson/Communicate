@@ -7,7 +7,8 @@ interface User {
 interface Message {
   content: string,
   sender: User,
-  timestamp: number
+  timestamp: number,
+  readUsers: User[]
 }
 
 interface Chat {

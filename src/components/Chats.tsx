@@ -3,7 +3,8 @@ import ChatPreview from './ChatPreview';
 import '../styles/Chats.scss';
 
 interface ChatsProps {
-  chats: Chat[],
+  user: User | null,
+  chats: Chat[]
 }
 
 class Chats extends React.Component<ChatsProps> {
@@ -11,7 +12,7 @@ class Chats extends React.Component<ChatsProps> {
     return (
       <div className="Chats">
         {this.props.chats.map((value, index) =>
-          <ChatPreview chat={value} key={index} />
+          <ChatPreview chat={value} user={this.props.user} key={index} />
         )}
       </div>
     );
