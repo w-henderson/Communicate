@@ -4,12 +4,12 @@ import '../styles/ConversationHeader.scss';
 import Icon from './Icon';
 
 interface ConversationHeaderProps {
-  recipientUser: User | null
+  recipientUser: User | undefined
 }
 
 class ConversationHeader extends React.Component<ConversationHeaderProps> {
   render() {
-    if (this.props.recipientUser !== null) {
+    if (this.props.recipientUser !== undefined) {
       return (
         <div className="ConversationHeader">
           <img src={this.props.recipientUser.profilePicture} alt="Recipient profile" />

@@ -5,7 +5,7 @@ import '../styles/Chats.scss';
 interface ChatsProps {
   user: User | null,
   chats: Chat[],
-  activeID: string
+  activeID: string | undefined
 }
 
 class Chats extends React.Component<ChatsProps> {

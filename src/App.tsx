@@ -10,7 +10,7 @@ import Chats from './components/Chats';
 interface AppState {
   user: User | null,
   chats: Chat[],
-  activeChat: FullChat
+  activeChat: FullChat | null
 };
 
 class App extends React.Component<{}, AppState> {
@@ -55,7 +55,7 @@ class App extends React.Component<{}, AppState> {
       activeChat: {
         recipient: user,
         id: "bd18e35b-961e-4393-95e3-36c7bc59f2f6",
-        messages: [message]
+        messages: [message, message, message]
       }
     });
   }
@@ -65,9 +65,9 @@ class App extends React.Component<{}, AppState> {
       return (
         <div className="App">
           <Menu user={this.state.user} />
-          <ConversationHeader recipientUser={this.state.activeChat.recipient} />
-          <Chats chats={this.state.chats} user={this.state.user} activeID={this.state.activeChat.id} />
-          <Conversation />
+          <ConversationHeader recipientUser={this.state.activeChat?.recipient} />
+          <Chats chats={this.state.chats} user={this.state.user} activeID={this.state.activeChat?.id} />
+          <Conversation chat={this.state.activeChat} user={this.state.user} />
         </div>
       );
     } else {

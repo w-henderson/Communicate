@@ -4,7 +4,7 @@ interface User {
   profilePicture: string
 }
 
-interface Message {
+interface UserMessage {
   content: string,
   sender: User,
   timestamp: number,
@@ -14,11 +14,11 @@ interface Message {
 interface Chat {
   recipient: User,
   id: string,
-  mostRecentMessage: Message
+  mostRecentMessage: UserMessage
 }
 
 interface FullChat {
   recipient: User,
   id: string,
-  messages: Message[]
+  messages: UserMessage[]
 }

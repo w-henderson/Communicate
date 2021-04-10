@@ -1,11 +1,35 @@
 import React from "react";
+import Message from "./Message";
+import Icon from "./Icon";
 import '../styles/Conversation.scss';
 
-class Conversation extends React.Component {
+interface ConversationProps {
+  chat: FullChat | null,
+  user: User
+}
+
+class Conversation extends React.Component<ConversationProps> {
   render() {
-    return (
-      <div className="Conversation"></div>
-    );
+    if (this.props.chat !== null) {
+      return (
+        <div className="Conversation">
+          <div className="messages">
+            {this.props.chat.messages.map((value, index) =>
+              <Message key={index} message={value} user={this.props.user} />
+            )}
+          </div>
+
+          <div className="messageInput">
+            <input placeholder="Type a message" />
+            <Icon>cursor-fill</Icon>
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="Conversation empty"></div>
+      )
+    }
   }
 }
 
