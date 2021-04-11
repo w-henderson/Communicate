@@ -98,4 +98,11 @@ div.Chats {
       opacity: 0.75;
     }
   }
+
+  &.empty {
+    padding: 32px;
+    font-weight: 200;
+    font-size: 18px;
+    text-align: center;
+  }
 }

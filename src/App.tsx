@@ -11,6 +11,7 @@ import Chats from './components/Chats';
 import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/database";
+import "firebase/storage";
 
 interface AppState {
   user: User | null,
@@ -21,6 +22,8 @@ interface AppState {
 class App extends React.Component<{}, AppState> {
   auth: firebase.auth.Auth;
   db: firebase.database.Database;
+  userRef: firebase.database.Reference | undefined;
+  chatRefs: firebase.database.Reference[];
 
   constructor(props) {
     super(props);
@@ -30,6 +33,7 @@ class App extends React.Component<{}, AppState> {
         apiKey: process.env.REACT_APP_FIREBASE_KEY,
         authDomain: process.env.REACT_APP_FIREBASE_AUTH,
         projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+        databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
         storageBucket: process.env.REACT_APP_FIREBASE_STORAGE,
         messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING,
         appId: process.env.REACT_APP_FIREBASE_APP_ID
@@ -42,10 +46,102 @@ class App extends React.Component<{}, AppState> {
     this.db = firebase.database();
     this.signIn = this.signIn.bind(this);
     this.updateAuthDisplay = this.updateAuthDisplay.bind(this);
+    this.userListener = this.userListener.bind(this);
+    this.conversationPreviewUpdate = this.conversationPreviewUpdate.bind(this);
+
+    this.chatRefs = [];
   }
 
   componentDidMount() {
     this.auth.onAuthStateChanged(this.updateAuthDisplay);
+  }
+
+  async userListener(snapshot: firebase.database.DataSnapshot) {
+    let val = snapshot.val();
+
+    console.log(val);
+
+    if (val === null) {
+      this.userRef?.set({
+        name: this.state.user?.name,
+        profilePicture: this.state.user?.profilePicture // TODO upload profile picture
+      });
+
+      return;
+    }
+
+    let self: User = {
+      name: val.name || "User",
+      id: snapshot.key || "",
+      profilePicture: val.profilePicture || defaultProfilePicture
+    }
+
+    this.setState({
+      user: self
+    });
+
+    // Add shallow listeners for each conversation
+    if (val.conversations) {
+      this.chatRefs = val.conversations.map(id => this.db.ref(`conversations/${id}`));
+
+      let newChatsState: Chat[] = [];
+      for (let chatRef of this.chatRefs) {
+        let participants: string[] = Object.values((await chatRef.child("participants").once("value")).val());
+        let remoteParticipant = participants.find(value => value !== snapshot.key);
+        let lastMessage = (await chatRef.child("messages").limitToLast(1).once("value")).val();
+        let senderUser = (await this.db.ref(`users/${remoteParticipant}`).once("value")).val();
+
+        lastMessage = lastMessage[lastMessage.length - 1];
+
+        let sender: User = {
+          name: senderUser.name,
+          id: remoteParticipant || "",
+          profilePicture: senderUser.profilePicture
+        }
+
+        // TODO: allow for more than 2 users
+        let readUsers: User[] = lastMessage.readUsers.map(user => user === self.id ? self : sender);
+
+        newChatsState.push({
+          recipient: sender,
+          id: chatRef.key || "",
+          mostRecentMessage: {
+            content: lastMessage.content,
+            sender: lastMessage.sender === remoteParticipant ? sender : self,
+            timestamp: lastMessage.timestamp,
+            readUsers
+          }
+        });
+      }
+
+      this.setState({
+        chats: newChatsState
+      }, () => {
+        for (let chatRef of val.conversations.map(id => this.db.ref(`conversations/${id}`))) {
+          chatRef.child("messages").limitToLast(1).on("value", (e) => this.conversationPreviewUpdate(e, chatRef.key));
+        }
+      });
+    }
+  }
+
+  conversationPreviewUpdate(snapshot: firebase.database.DataSnapshot, id: string) {
+    let oldState = this.state.chats;
+    let oldStateIndex = oldState.findIndex(value => value.id === id);
+    let val = snapshot.val()[snapshot.val().length - 1];
+
+    let readUsers: User[] = val.readUsers.map(user =>
+      user === this.state.user?.id ? this.state.user : oldState[oldStateIndex].recipient);
+
+    oldState[oldStateIndex].mostRecentMessage = {
+      content: val.content,
+      sender: oldState[oldStateIndex].recipient,
+      timestamp: val.timestamp,
+      readUsers
+    };
+
+    this.setState({
+      chats: oldState
+    });
   }
 
   signIn() {
@@ -54,7 +150,10 @@ class App extends React.Component<{}, AppState> {
 
   updateAuthDisplay(user: firebase.User | null) {
     if (user !== null) {
-      console.log(user.uid);
+      this.userRef = this.db.ref(`users/${user.uid}`);
+      this.userRef.on("value", this.userListener);
+      console.log("set up listener");
+
       this.setState({
         user: {
           name: user.displayName || "User",

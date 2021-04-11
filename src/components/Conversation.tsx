@@ -27,7 +27,10 @@ class Conversation extends React.Component<ConversationProps> {
       );
     } else {
       return (
-        <div className="Conversation empty"></div>
+        <div className="Conversation empty">
+          Welcome to Communicate!<br />
+          Select a conversation from the left to start.
+        </div>
       )
     }
   }
