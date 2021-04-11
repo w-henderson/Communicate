@@ -1,11 +1,16 @@
 import React from "react";
 import "./styles/App.scss";
-import profilePicture from './images/placeholder_profile_picture.jpg';
+import signInButton from './images/google_sign_in.png';
+import defaultProfilePicture from './images/placeholder_profile_picture.png';
 
 import Menu from './components/Menu';
 import ConversationHeader from './components/ConversationHeader';
 import Conversation from './components/Conversation';
 import Chats from './components/Chats';
+
+import firebase from "firebase/app";
+import "firebase/auth";
+import "firebase/database";
 
 interface AppState {
   user: User | null,
@@ -14,50 +19,50 @@ interface AppState {
 };
 
 class App extends React.Component<{}, AppState> {
+  auth: firebase.auth.Auth;
+  db: firebase.database.Database;
+
+  constructor(props) {
+    super(props);
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: process.env.REACT_APP_FIREBASE_KEY,
+        authDomain: process.env.REACT_APP_FIREBASE_AUTH,
+        projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+        storageBucket: process.env.REACT_APP_FIREBASE_STORAGE,
+        messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING,
+        appId: process.env.REACT_APP_FIREBASE_APP_ID
+      });
+    } else {
+      firebase.app();
+    }
+
+    this.auth = firebase.auth();
+    this.db = firebase.database();
+    this.signIn = this.signIn.bind(this);
+    this.updateAuthDisplay = this.updateAuthDisplay.bind(this);
+  }
+
   componentDidMount() {
-    // Set a virtual user for debugging before we add Firebase auth
-    let user = {
-      name: "William Henderson",
-      profilePicture: profilePicture,
-      id: "1c31d64f-8c57-481d-81a5-1a58acdabc5b"
-    };
+    this.auth.onAuthStateChanged(this.updateAuthDisplay);
+  }
 
-    // Set a virtual message for debugging before we add FBRTDB
-    let chat = {
-      recipient: user,
-      id: "bd18e35b-961e-4393-95e3-36c7bc59f2f5",
-      mostRecentMessage: {
-        content: "This is an example message",
-        sender: user,
-        timestamp: 1617794712076,
-        readUsers: [user]
-      }
-    };
+  signIn() {
+    this.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+  }
 
-    let message = {
-      content: "This is an example message 2",
-      sender: user,
-      timestamp: 1617894712076,
-      readUsers: [user]
-    };
-
-    let otherChat = {
-      recipient: user,
-      id: "bd18e35b-961e-4393-95e3-36c7bc59f2f6",
-      mostRecentMessage: message
-    };
-
-    this.setState({
-      user,
-      chats: [
-        otherChat, chat, chat, chat, chat, chat, chat, chat, chat, chat
-      ],
-      activeChat: {
-        recipient: user,
-        id: "bd18e35b-961e-4393-95e3-36c7bc59f2f6",
-        messages: [message, message, message]
-      }
-    });
+  updateAuthDisplay(user: firebase.User | null) {
+    if (user !== null) {
+      console.log(user.uid);
+      this.setState({
+        user: {
+          name: user.displayName || "User",
+          id: user.uid,
+          profilePicture: user.photoURL || defaultProfilePicture
+        }
+      });
+    }
   }
 
   render() {
@@ -72,7 +77,9 @@ class App extends React.Component<{}, AppState> {
       );
     } else {
       return (
-        <div></div>
+        <div className="SignIn">
+          <img src={signInButton} alt="Sign in button" onClick={this.signIn} />
+        </div>
       )
     }
   }

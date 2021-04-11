@@ -21,3 +21,16 @@ div.App {
     max-width: calc(100% - 48px);
   }
 }
+
+div.SignIn {
+  img {
+    width: 250px;
+    filter: drop-shadow(var(--shadow-wide));
+    cursor: pointer;
+    transition: filter 100ms;
+
+    &:active {
+      filter: drop-shadow(var(--shadow-wide)) brightness(90%);
+    }
+  }
+}

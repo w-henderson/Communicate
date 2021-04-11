@@ -12,7 +12,7 @@ class Chats extends React.Component<ChatsProps> {
   render() {
     return (
       <div className="Chats">
-        {this.props.chats.map((value, index) =>
+        {this.props.chats !== undefined && this.props.chats.map((value, index) =>
           <ChatPreview chat={value} user={this.props.user} key={index} active={this.props.activeID === value.id} />
         )}
       </div>

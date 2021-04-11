@@ -10,7 +10,7 @@ interface ConversationProps {
 
 class Conversation extends React.Component<ConversationProps> {
   render() {
-    if (this.props.chat !== null) {
+    if (this.props.chat !== null && this.props.chat !== undefined) {
       return (
         <div className="Conversation">
           <div className="messages">
