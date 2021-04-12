@@ -22,6 +22,7 @@ interface AppState {
 class App extends React.Component<{}, AppState> {
   auth: firebase.auth.Auth;
   db: firebase.database.Database;
+  storage: firebase.storage.Storage;
   userRef: firebase.database.Reference | undefined;
   chatRefs: firebase.database.Reference[];
 
@@ -44,10 +45,13 @@ class App extends React.Component<{}, AppState> {
 
     this.auth = firebase.auth();
     this.db = firebase.database();
+    this.storage = firebase.storage();
+
     this.signIn = this.signIn.bind(this);
     this.updateAuthDisplay = this.updateAuthDisplay.bind(this);
     this.userListener = this.userListener.bind(this);
     this.conversationPreviewUpdate = this.conversationPreviewUpdate.bind(this);
+    this.storagePathToURL = this.storagePathToURL.bind(this);
 
     this.chatRefs = [];
   }
@@ -56,15 +60,24 @@ class App extends React.Component<{}, AppState> {
     this.auth.onAuthStateChanged(this.updateAuthDisplay);
   }
 
+  storagePathToURL(path: string): Promise<string> {
+    return this.storage.ref(path).getDownloadURL();
+  }
+
   async userListener(snapshot: firebase.database.DataSnapshot) {
     let val = snapshot.val();
 
     console.log(val);
 
-    if (val === null) {
+    if (val === null && this.state.user !== null) {
+      let profilePictureRef = this.storage.ref(`users/${snapshot.key}.jpg`);
+      let profilePicture = await (await fetch(this.state.user.profilePicture)).blob();
+
+      await profilePictureRef.put(profilePicture);
+
       this.userRef?.set({
         name: this.state.user?.name,
-        profilePicture: this.state.user?.profilePicture // TODO upload profile picture
+        profilePicture: `users/${snapshot.key}.jpg`
       });
 
       return;
@@ -73,7 +86,7 @@ class App extends React.Component<{}, AppState> {
     let self: User = {
       name: val.name || "User",
       id: snapshot.key || "",
-      profilePicture: val.profilePicture || defaultProfilePicture
+      profilePicture: (await this.storagePathToURL(val.profilePicture)) || defaultProfilePicture
     }
 
     this.setState({
@@ -96,7 +109,7 @@ class App extends React.Component<{}, AppState> {
         let sender: User = {
           name: senderUser.name,
           id: remoteParticipant || "",
-          profilePicture: senderUser.profilePicture
+          profilePicture: await this.storagePathToURL(senderUser.profilePicture)
         }
 
         // TODO: allow for more than 2 users
@@ -150,16 +163,16 @@ class App extends React.Component<{}, AppState> {
 
   updateAuthDisplay(user: firebase.User | null) {
     if (user !== null) {
-      this.userRef = this.db.ref(`users/${user.uid}`);
-      this.userRef.on("value", this.userListener);
-      console.log("set up listener");
-
       this.setState({
         user: {
           name: user.displayName || "User",
           id: user.uid,
           profilePicture: user.photoURL || defaultProfilePicture
         }
+      }, () => {
+        this.userRef = this.db.ref(`users/${user.uid}`);
+        this.userRef.on("value", this.userListener);
+        console.log("set up listener");
       });
     }
   }
