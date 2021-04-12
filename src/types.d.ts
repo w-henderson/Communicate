@@ -5,6 +5,7 @@ interface User {
 }
 
 interface UserMessage {
+  id: string,
   content: string,
   sender: User,
   timestamp: number,

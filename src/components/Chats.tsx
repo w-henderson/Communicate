@@ -5,7 +5,8 @@ import '../styles/Chats.scss';
 interface ChatsProps {
   user: User | null,
   chats: Chat[],
-  activeID: string | undefined
+  activeID: string | undefined,
+  selectCallback: (id: string) => void
 }
 
 class Chats extends React.Component<ChatsProps> {
@@ -14,7 +15,12 @@ class Chats extends React.Component<ChatsProps> {
       return (
         <div className="Chats">
           {this.props.chats.map((value, index) =>
-            <ChatPreview chat={value} user={this.props.user} key={index} active={this.props.activeID === value.id} />
+            <ChatPreview
+              chat={value}
+              user={this.props.user}
+              key={index}
+              active={this.props.activeID === value.id} 
+              selectCallback={() => this.props.selectCallback(value.id)}/>
           )}
         </div>
       );

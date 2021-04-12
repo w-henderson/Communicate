@@ -5,7 +5,8 @@ import '../styles/Conversation.scss';
 
 interface ConversationProps {
   chat: FullChat | null,
-  user: User
+  user: User,
+  readCallback: (conversationID: string, messageID: string) => void
 }
 
 class Conversation extends React.Component<ConversationProps> {
@@ -15,7 +16,11 @@ class Conversation extends React.Component<ConversationProps> {
         <div className="Conversation">
           <div className="messages">
             {this.props.chat.messages.map((value, index) =>
-              <Message key={index} message={value} user={this.props.user} />
+              <Message
+                key={index}
+                message={value}
+                user={this.props.user}
+                readCallback={() => this.props.readCallback(this.props.chat?.id || "-1", value.id)} />
             )}
           </div>
 

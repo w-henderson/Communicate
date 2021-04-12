@@ -2,10 +2,15 @@ import React from "react";
 
 interface MessageProps {
   message: UserMessage,
-  user: User
+  user: User,
+  readCallback: () => void
 }
 
 class Message extends React.Component<MessageProps> {
+  componentDidMount() {
+    this.props.readCallback();
+  }
+
   render() {
     let timeString = new Date(this.props.message.timestamp).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 

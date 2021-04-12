@@ -25,6 +25,7 @@ class App extends React.Component<{}, AppState> {
   storage: firebase.storage.Storage;
   userRef: firebase.database.Reference | undefined;
   chatRefs: firebase.database.Reference[];
+  activeMessages: firebase.database.Reference | undefined;
 
   constructor(props) {
     super(props);
@@ -52,6 +53,9 @@ class App extends React.Component<{}, AppState> {
     this.userListener = this.userListener.bind(this);
     this.conversationPreviewUpdate = this.conversationPreviewUpdate.bind(this);
     this.storagePathToURL = this.storagePathToURL.bind(this);
+    this.selectConversation = this.selectConversation.bind(this);
+    this.newMessageHandler = this.newMessageHandler.bind(this);
+    this.markMessageAsRead = this.markMessageAsRead.bind(this);
 
     this.chatRefs = [];
   }
@@ -62,6 +66,59 @@ class App extends React.Component<{}, AppState> {
 
   storagePathToURL(path: string): Promise<string> {
     return this.storage.ref(path).getDownloadURL();
+  }
+
+  uidToObject(uid: string): Promise<User> {
+    return this.db.ref(`users/${uid}`).once("value").then(async val => {
+      let value = val.val();
+      let name = value.name;
+      let profilePicture = await this.storagePathToURL(value.profilePicture);
+
+      return {
+        name,
+        id: uid,
+        profilePicture
+      };
+    });
+  }
+
+  async selectConversation(id: string) {
+    let mainRef = this.db.ref(`conversations/${id}`);
+    if (this.activeMessages) this.activeMessages.off();
+    this.activeMessages = this.db.ref(`conversations/${id}/messages`);
+
+    let val = (await mainRef.once("value")).val();
+    let recipientID = val.participants.find(value => value !== this.state.user?.id);
+    let recipient = await this.uidToObject(recipientID);
+
+    this.setState({
+      activeChat: {
+        recipient,
+        id,
+        messages: []
+      }
+    }, () => {
+      this.activeMessages?.on("child_added", this.newMessageHandler);
+    });
+  }
+
+  async newMessageHandler(snapshot: firebase.database.DataSnapshot) {
+    let val = snapshot.val();
+    let sender = val.sender === this.state.user?.id ? this.state.user : this.state.activeChat?.recipient;
+
+    let oldActiveChat = this.state.activeChat;
+    if (this.state.user === null) return;
+    oldActiveChat?.messages.push({
+      id: snapshot.key || "-1",
+      content: val.content,
+      sender: sender || this.state.user,
+      readUsers: [],
+      timestamp: val.timestamp
+    });
+
+    this.setState({
+      activeChat: oldActiveChat
+    });
   }
 
   async userListener(snapshot: firebase.database.DataSnapshot) {
@@ -104,7 +161,8 @@ class App extends React.Component<{}, AppState> {
         let lastMessage = (await chatRef.child("messages").limitToLast(1).once("value")).val();
         let senderUser = (await this.db.ref(`users/${remoteParticipant}`).once("value")).val();
 
-        lastMessage = lastMessage[lastMessage.length - 1];
+        let lastMessageID = Object.keys(lastMessage)[0];
+        lastMessage = lastMessage[lastMessageID];
 
         let sender: User = {
           name: senderUser.name,
@@ -119,6 +177,7 @@ class App extends React.Component<{}, AppState> {
           recipient: sender,
           id: chatRef.key || "",
           mostRecentMessage: {
+            id: lastMessageID,
             content: lastMessage.content,
             sender: lastMessage.sender === remoteParticipant ? sender : self,
             timestamp: lastMessage.timestamp,
@@ -137,15 +196,29 @@ class App extends React.Component<{}, AppState> {
     }
   }
 
+  async markMessageAsRead(conversationID: string, messageID: string) {
+    let messageRef = this.db.ref(`conversations/${conversationID}/messages/${messageID}`);
+    let oldMessage = (await messageRef.once("value")).val();
+
+    if (!oldMessage.readUsers.includes(this.state.user?.id || "")) {
+      oldMessage.readUsers.push(this.state.user?.id || "");
+      messageRef.set(oldMessage);
+    }
+  }
+
   conversationPreviewUpdate(snapshot: firebase.database.DataSnapshot, id: string) {
     let oldState = this.state.chats;
     let oldStateIndex = oldState.findIndex(value => value.id === id);
-    let val = snapshot.val()[snapshot.val().length - 1];
+
+    let val = snapshot.val();
+    let lastMessageID = Object.keys(val)[0];
+    val = val[lastMessageID];
 
     let readUsers: User[] = val.readUsers.map(user =>
       user === this.state.user?.id ? this.state.user : oldState[oldStateIndex].recipient);
 
     oldState[oldStateIndex].mostRecentMessage = {
+      id: lastMessageID,
       content: val.content,
       sender: oldState[oldStateIndex].recipient,
       timestamp: val.timestamp,
@@ -183,8 +256,8 @@ class App extends React.Component<{}, AppState> {
         <div className="App">
           <Menu user={this.state.user} />
           <ConversationHeader recipientUser={this.state.activeChat?.recipient} />
-          <Chats chats={this.state.chats} user={this.state.user} activeID={this.state.activeChat?.id} />
-          <Conversation chat={this.state.activeChat} user={this.state.user} />
+          <Chats chats={this.state.chats} user={this.state.user} activeID={this.state.activeChat?.id} selectCallback={this.selectConversation} />
+          <Conversation chat={this.state.activeChat} user={this.state.user} readCallback={this.markMessageAsRead} />
         </div>
       );
     } else {
