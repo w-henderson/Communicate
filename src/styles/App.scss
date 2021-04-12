@@ -20,11 +20,18 @@ div.App {
   @media only screen and (max-height: 800px) {
     max-width: calc(100% - 48px);
   }
+
+  @media only screen and (orientation: portrait) {
+    max-height: unset;
+    max-width: unset;
+  }
 }
 
 div.SignIn {
   img {
+    display: block;
     width: 250px;
+    margin-top: 10px;
     filter: drop-shadow(var(--shadow-wide));
     cursor: pointer;
     transition: filter 100ms;

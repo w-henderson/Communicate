@@ -1,6 +1,7 @@
 import React from "react";
 import "./styles/App.scss";
-import signInButton from './images/google_sign_in.png';
+import googleSignInButton from './images/google_sign_in.png';
+import githubSignInButton from './images/github_sign_in.png';
 import defaultProfilePicture from './images/placeholder_profile_picture.png';
 
 import Menu from './components/Menu';
@@ -231,8 +232,11 @@ class App extends React.Component<{}, AppState> {
     });
   }
 
-  signIn() {
-    this.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+  signIn(provider: "Google" | "GitHub") {
+    switch (provider) {
+      case "Google": this.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); break;
+      case "GitHub": this.auth.signInWithPopup(new firebase.auth.GithubAuthProvider()); break;
+    };
   }
 
   updateAuthDisplay(user: firebase.User | null) {
@@ -276,7 +280,8 @@ class App extends React.Component<{}, AppState> {
     } else {
       return (
         <div className="SignIn">
-          <img src={signInButton} alt="Sign in button" onClick={this.signIn} />
+          <img src={googleSignInButton} alt="Sign in with Google" onClick={() => this.signIn("Google")} draggable={false} />
+          <img src={githubSignInButton} alt="Sign in with GitHub" onClick={() => this.signIn("GitHub")} draggable={false} />
         </div>
       )
     }
