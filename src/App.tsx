@@ -56,6 +56,7 @@ class App extends React.Component<{}, AppState> {
     this.selectConversation = this.selectConversation.bind(this);
     this.newMessageHandler = this.newMessageHandler.bind(this);
     this.markMessageAsRead = this.markMessageAsRead.bind(this);
+    this.sendMessage = this.sendMessage.bind(this);
 
     this.chatRefs = [];
   }
@@ -250,6 +251,18 @@ class App extends React.Component<{}, AppState> {
     }
   }
 
+  sendMessage(message: string) {
+    let newMessage = {
+      content: message,
+      readUsers: [this.state.user?.id],
+      sender: this.state.user?.id,
+      timestamp: new Date().getTime()
+    };
+
+    let newMessageRef = this.db.ref(`conversations/${this.state.activeChat?.id}/messages`).push();
+    newMessageRef.set(newMessage);
+  }
+
   render() {
     if (this.state !== null && this.state.user !== null) {
       return (
@@ -257,7 +270,7 @@ class App extends React.Component<{}, AppState> {
           <Menu user={this.state.user} />
           <ConversationHeader recipientUser={this.state.activeChat?.recipient} />
           <Chats chats={this.state.chats} user={this.state.user} activeID={this.state.activeChat?.id} selectCallback={this.selectConversation} />
-          <Conversation chat={this.state.activeChat} user={this.state.user} readCallback={this.markMessageAsRead} />
+          <Conversation chat={this.state.activeChat} user={this.state.user} readCallback={this.markMessageAsRead} sendCallback={this.sendMessage} />
         </div>
       );
     } else {
@@ -267,6 +280,12 @@ class App extends React.Component<{}, AppState> {
         </div>
       )
     }
+  }
+
+  componentDidUpdate() {
+    let messages = document.querySelector("div.messages");
+    let lastMessage = messages?.lastElementChild;
+    if (lastMessage) lastMessage.scrollIntoView();
   }
 }
 

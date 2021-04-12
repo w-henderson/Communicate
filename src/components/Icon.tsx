@@ -1,9 +1,13 @@
 import React from "react";
 
-class Icon extends React.Component {
+interface IconProps {
+  onClick?: () => void
+}
+
+class Icon extends React.Component<IconProps> {
   render() {
     return (
-      <i className={`bi bi-${this.props.children}`}></i>
+      <i className={`bi bi-${this.props.children}`} onClick={this.props.onClick}></i>
     );
   }
 }

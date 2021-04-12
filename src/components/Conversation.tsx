@@ -6,10 +6,31 @@ import '../styles/Conversation.scss';
 interface ConversationProps {
   chat: FullChat | null,
   user: User,
-  readCallback: (conversationID: string, messageID: string) => void
+  readCallback: (conversationID: string, messageID: string) => void,
+  sendCallback: (message: string) => void
 }
 
-class Conversation extends React.Component<ConversationProps> {
+interface ConversationState {
+  message: string
+}
+
+class Conversation extends React.Component<ConversationProps, ConversationState> {
+  constructor(props) {
+    super(props);
+    this.state = {
+      message: ""
+    };
+  }
+
+  preSend(e: React.KeyboardEvent) {
+    if (e.key === "Enter") this.sendMessage();
+  }
+
+  sendMessage() {
+    this.props.sendCallback(this.state.message);
+    this.setState({ message: "" });
+  }
+
   render() {
     if (this.props.chat !== null && this.props.chat !== undefined) {
       return (
@@ -25,8 +46,12 @@ class Conversation extends React.Component<ConversationProps> {
           </div>
 
           <div className="messageInput">
-            <input placeholder="Type a message" />
-            <Icon>cursor-fill</Icon>
+            <input
+              placeholder="Type a message"
+              onChange={(e) => this.setState({ message: e.target.value })}
+              onKeyDown={this.preSend.bind(this)}
+              value={this.state.message} />
+            <Icon onClick={this.sendMessage.bind(this)}>cursor-fill</Icon>
           </div>
         </div>
       );

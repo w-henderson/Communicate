@@ -5,6 +5,7 @@ div.Conversation {
 
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 
   div.messages {
     flex: 1;
@@ -49,7 +50,6 @@ div.Conversation {
     width: 100%;
     height: 72px;
     padding: 12px;
-    margin-top: 16px;
     background-color: var(--light);
     border-top: 1px solid var(--mid);
 
@@ -64,6 +64,10 @@ div.Conversation {
 
       background-color: var(--lightest);
       font-family: Inter;
+
+      box-shadow: none;
+      transition: box-shadow 250ms;
+      &:focus { box-shadow: var(--shadow-light); }
     }
 
     i {
