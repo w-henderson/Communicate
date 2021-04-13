@@ -31,5 +31,9 @@ div.ConversationHeader {
 
     cursor: pointer;
     user-select: none;
+
+    &:first-child {
+      margin-right: 8px;
+    }
   }
 }

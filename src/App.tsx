@@ -18,7 +18,8 @@ interface AppState {
   user: User | null,
   chats: Chat[],
   activeChat: FullChat | null,
-  searchBarActive: boolean
+  searchBarActive: boolean,
+  mobile: boolean
 };
 
 class App extends React.Component<{}, AppState> {
@@ -63,12 +64,22 @@ class App extends React.Component<{}, AppState> {
     this.toggleSearchBar = this.toggleSearchBar.bind(this);
     this.getUserByEmail = this.getUserByEmail.bind(this);
     this.createConversation = this.createConversation.bind(this);
+    this.disableActive = this.disableActive.bind(this);
 
     this.chatRefs = [];
   }
 
   componentDidMount() {
     this.auth.onAuthStateChanged(this.updateAuthDisplay);
+    this.setState({
+      mobile: window.matchMedia("(orientation:portrait)").matches
+    });
+
+    window.onresize = () => {
+      this.setState({
+        mobile: window.matchMedia("(orientation:portrait)").matches
+      });
+    }
   }
 
   storagePathToURL(path: string): Promise<string> {
@@ -108,6 +119,11 @@ class App extends React.Component<{}, AppState> {
     }, () => {
       this.activeMessagesListener = this.activeMessagesRef?.on("child_added", this.newMessageHandler);
     });
+  }
+
+  disableActive() {
+    if (this.activeMessagesListener && this.activeMessagesRef) this.activeMessagesRef.off("child_added", this.activeMessagesListener);
+    this.setState({ activeChat: null });
   }
 
   async newMessageHandler(snapshot: firebase.database.DataSnapshot) {
@@ -357,13 +373,19 @@ class App extends React.Component<{}, AppState> {
 
   render() {
     if (this.state !== null && this.state.user !== null) {
+      let appClass: string;
+      if (this.state.mobile) appClass = this.state.activeChat ? "App rightColumn" : "App leftColumn";
+      else appClass = "App";
+
       return (
-        <div className="App">
+        <div className={appClass}>
           <Menu
             user={this.state.user}
             searchCallback={this.toggleSearchBar} />
           <ConversationHeader
-            recipientUser={this.state.activeChat?.recipient} />
+            recipientUser={this.state.activeChat?.recipient}
+            showBackButton={this.state.mobile}
+            back={this.disableActive} />
           <Chats
             chats={this.state.chats}
             user={this.state.user}

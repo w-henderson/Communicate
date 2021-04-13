@@ -25,6 +25,9 @@ div.App {
     max-height: unset;
     max-width: unset;
   }
+
+  &.leftColumn { grid-template-columns: 100% 0%; }
+  &.rightColumn { grid-template-columns: 0% 100%; }
 }
 
 div.SignIn {
