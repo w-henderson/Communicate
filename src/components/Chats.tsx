@@ -4,12 +4,10 @@ import SearchBar from './SearchBar';
 import '../styles/Chats.scss';
 
 interface ChatsProps {
-  user: User | null,
   chats: Chat[],
   activeID: string | undefined,
   selectCallback: (id: string) => void,
   searchBarActive: boolean,
-  getUserByEmail: (email: string) => Promise<User | null>,
   createConversation: (user: User) => void
 }
 
@@ -20,13 +18,11 @@ class Chats extends React.Component<ChatsProps> {
         <div className="Chats">
           <SearchBar
             hidden={!this.props.searchBarActive} 
-            getUserByEmail={this.props.getUserByEmail} 
             createConversation={this.props.createConversation} />
 
           {this.props.chats.map((value, index) =>
             <ChatPreview
               chat={value}
-              user={this.props.user}
               key={index}
               active={this.props.activeID === value.id} 
               selectCallback={() => this.props.selectCallback(value.id)}/>
@@ -38,7 +34,6 @@ class Chats extends React.Component<ChatsProps> {
         <div className="Chats empty">
           <SearchBar
             hidden={!this.props.searchBarActive} 
-            getUserByEmail={this.props.getUserByEmail} 
             createConversation={this.props.createConversation} />
 
           You don't have any conversations!<br />

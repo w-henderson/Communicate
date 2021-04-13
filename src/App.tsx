@@ -14,18 +14,17 @@ import "firebase/auth";
 import "firebase/database";
 import "firebase/storage";
 
+import FirebaseContext, { FirebaseUtils } from "./contexts/FirebaseContext";
+
 interface AppState {
-  user: User | null,
   chats: Chat[],
   activeChat: FullChat | null,
   searchBarActive: boolean,
-  mobile: boolean
+  mobile: boolean,
+  firebase: FirebaseUtils
 };
 
 class App extends React.Component<{}, AppState> {
-  auth: firebase.auth.Auth;
-  db: firebase.database.Database;
-  storage: firebase.storage.Storage;
   userRef: firebase.database.Reference | undefined;
   chatRefs: firebase.database.Reference[];
   activeMessagesRef: firebase.database.Reference | undefined;
@@ -48,9 +47,18 @@ class App extends React.Component<{}, AppState> {
       firebase.app();
     }
 
-    this.auth = firebase.auth();
-    this.db = firebase.database();
-    this.storage = firebase.storage();
+    this.state = {
+      chats: [],
+      activeChat: null,
+      searchBarActive: false,
+      mobile: false,
+      firebase: {
+        auth: firebase.auth(),
+        database: firebase.database(),
+        storage: firebase.storage(),
+        user: null
+      }
+    };
 
     this.signIn = this.signIn.bind(this);
     this.updateAuthDisplay = this.updateAuthDisplay.bind(this);
@@ -59,10 +67,7 @@ class App extends React.Component<{}, AppState> {
     this.storagePathToURL = this.storagePathToURL.bind(this);
     this.selectConversation = this.selectConversation.bind(this);
     this.newMessageHandler = this.newMessageHandler.bind(this);
-    this.markMessageAsRead = this.markMessageAsRead.bind(this);
-    this.sendMessage = this.sendMessage.bind(this);
     this.toggleSearchBar = this.toggleSearchBar.bind(this);
-    this.getUserByEmail = this.getUserByEmail.bind(this);
     this.createConversation = this.createConversation.bind(this);
     this.disableActive = this.disableActive.bind(this);
 
@@ -70,7 +75,7 @@ class App extends React.Component<{}, AppState> {
   }
 
   componentDidMount() {
-    this.auth.onAuthStateChanged(this.updateAuthDisplay);
+    this.state.firebase.auth.onAuthStateChanged(this.updateAuthDisplay);
     this.setState({
       mobile: window.matchMedia("(orientation:portrait)").matches
     });
@@ -83,11 +88,11 @@ class App extends React.Component<{}, AppState> {
   }
 
   storagePathToURL(path: string): Promise<string> {
-    return this.storage.ref(path).getDownloadURL();
+    return this.state.firebase.storage.ref(path).getDownloadURL();
   }
 
   uidToObject(uid: string): Promise<User> {
-    return this.db.ref(`users/${uid}`).once("value").then(async val => {
+    return this.state.firebase.database.ref(`users/${uid}`).once("value").then(async val => {
       let value = val.val();
       let name = value.name;
       let profilePicture = await this.storagePathToURL(value.profilePicture);
@@ -102,12 +107,12 @@ class App extends React.Component<{}, AppState> {
   }
 
   async selectConversation(id: string) {
-    let mainRef = this.db.ref(`conversations/${id}`);
+    let mainRef = this.state.firebase.database.ref(`conversations/${id}`);
     if (this.activeMessagesListener && this.activeMessagesRef) this.activeMessagesRef.off("child_added", this.activeMessagesListener);
-    this.activeMessagesRef = this.db.ref(`conversations/${id}/messages`);
+    this.activeMessagesRef = this.state.firebase.database.ref(`conversations/${id}/messages`);
 
     let val = (await mainRef.once("value")).val();
-    let recipientID = val.participants.find(value => value !== this.state.user?.id);
+    let recipientID = val.participants.find(value => value !== this.state.firebase.user?.id);
     let recipient = await this.uidToObject(recipientID);
 
     this.setState({
@@ -128,14 +133,14 @@ class App extends React.Component<{}, AppState> {
 
   async newMessageHandler(snapshot: firebase.database.DataSnapshot) {
     let val = snapshot.val();
-    let sender = val.sender === this.state.user?.id ? this.state.user : this.state.activeChat?.recipient;
+    let sender = val.sender === this.state.firebase.user?.id ? this.state.firebase.user : this.state.activeChat?.recipient;
 
     let oldActiveChat = this.state.activeChat;
-    if (this.state.user === null) return;
+    if (this.state.firebase.user === null) return;
     oldActiveChat?.messages.push({
       id: snapshot.key || "-1",
       content: val.content,
-      sender: sender || this.state.user,
+      sender: sender || this.state.firebase.user,
       readUsers: [],
       timestamp: val.timestamp
     });
@@ -148,16 +153,16 @@ class App extends React.Component<{}, AppState> {
   async userListener(snapshot: firebase.database.DataSnapshot) {
     let val = snapshot.val();
 
-    if (val === null && this.state.user !== null) {
-      let profilePictureRef = this.storage.ref(`users/${snapshot.key}.jpg`);
-      let profilePicture = await (await fetch(this.state.user.profilePicture)).blob();
+    if (val === null && this.state.firebase.user !== null) {
+      let profilePictureRef = this.state.firebase.storage.ref(`users/${snapshot.key}.jpg`);
+      let profilePicture = await (await fetch(this.state.firebase.user.profilePicture)).blob();
 
       await profilePictureRef.put(profilePicture);
 
       this.userRef?.set({
-        name: this.state.user.name,
+        name: this.state.firebase.user.name,
         profilePicture: `users/${snapshot.key}.jpg`,
-        emailAddress: this.state.user.emailAddress
+        emailAddress: this.state.firebase.user.emailAddress
       });
 
       return;
@@ -170,20 +175,23 @@ class App extends React.Component<{}, AppState> {
       emailAddress: val.emailAddress
     }
 
+    let oldFirebase = this.state.firebase;
+    oldFirebase.user = self;
+
     this.setState({
-      user: self
+      firebase: oldFirebase
     });
 
     // Add shallow listeners for each conversation
     if (val.conversations) {
-      this.chatRefs = Object.values(val.conversations).map(id => this.db.ref(`conversations/${id}`));
+      this.chatRefs = Object.values(val.conversations).map(id => this.state.firebase.database.ref(`conversations/${id}`));
 
       let newChatsState: Chat[] = [];
       for (let chatRef of this.chatRefs) {
         let participants: string[] = Object.values((await chatRef.child("participants").once("value")).val());
         let remoteParticipant = participants.find(value => value !== snapshot.key);
         let lastMessage = (await chatRef.child("messages").limitToLast(1).once("value")).val();
-        let senderUser = (await this.db.ref(`users/${remoteParticipant}`).once("value")).val();
+        let senderUser = (await this.state.firebase.database.ref(`users/${remoteParticipant}`).once("value")).val();
 
         let sender: User = {
           name: senderUser.name,
@@ -228,16 +236,6 @@ class App extends React.Component<{}, AppState> {
     }
   }
 
-  async markMessageAsRead(conversationID: string, messageID: string) {
-    let messageRef = this.db.ref(`conversations/${conversationID}/messages/${messageID}`);
-    let oldMessage = (await messageRef.once("value")).val();
-
-    if (!oldMessage.readUsers.includes(this.state.user?.id || "")) {
-      oldMessage.readUsers.push(this.state.user?.id || "");
-      messageRef.set(oldMessage);
-    }
-  }
-
   conversationPreviewUpdate(snapshot: firebase.database.DataSnapshot, id: string) {
     let oldState = this.state.chats;
     let oldStateIndex = oldState.findIndex(value => value.id === id);
@@ -249,7 +247,7 @@ class App extends React.Component<{}, AppState> {
       val = val[lastMessageID];
 
       let readUsers: User[] = val.readUsers.map(user =>
-        user === this.state.user?.id ? this.state.user : oldState[oldStateIndex].recipient);
+        user === this.state.firebase.user?.id ? this.state.firebase.user : oldState[oldStateIndex].recipient);
 
       oldState[oldStateIndex].mostRecentMessage = {
         id: lastMessageID,
@@ -277,8 +275,8 @@ class App extends React.Component<{}, AppState> {
 
   signIn(provider: "Google" | "GitHub") {
     switch (provider) {
-      case "Google": this.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); break;
-      case "GitHub": this.auth.signInWithPopup(new firebase.auth.GithubAuthProvider()); break;
+      case "Google": this.state.firebase.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); break;
+      case "GitHub": this.state.firebase.auth.signInWithPopup(new firebase.auth.GithubAuthProvider()); break;
     };
   }
 
@@ -292,15 +290,18 @@ class App extends React.Component<{}, AppState> {
         return;
       }
 
+      let oldFirebase = this.state.firebase;
+      oldFirebase.user = {
+        name: displayName,
+        id: user.uid,
+        profilePicture: user.photoURL || defaultProfilePicture,
+        emailAddress,
+      };
+
       this.setState({
-        user: {
-          name: displayName,
-          id: user.uid,
-          profilePicture: user.photoURL || defaultProfilePicture,
-          emailAddress,
-        }
+        firebase: oldFirebase
       }, () => {
-        this.userRef = this.db.ref(`users/${user.uid}`);
+        this.userRef = this.state.firebase.database.ref(`users/${user.uid}`);
         this.userRef.on("value", this.userListener);
       });
     }
@@ -311,46 +312,12 @@ class App extends React.Component<{}, AppState> {
     this.setState({ searchBarActive: !currentSearchBarState });
   }
 
-  sendMessage(message: string) {
-    let newMessage = {
-      content: message,
-      readUsers: [this.state.user?.id],
-      sender: this.state.user?.id,
-      timestamp: new Date().getTime()
-    };
-
-    let newMessageRef = this.db.ref(`conversations/${this.state.activeChat?.id}/messages`).push();
-    newMessageRef.set(newMessage);
-  }
-
-  getUserByEmail(email: string): Promise<User | null> {
-    if (email === this.state.user?.emailAddress) return Promise.resolve(null);
-
-    let ref = this.db.ref("users").orderByChild("emailAddress").equalTo(email);
-    return ref.once("value").then(async snapshot => {
-      let value = snapshot.val();
-      if (value === null) return null;
-      let uid = Object.keys(value)[0];
-      value = value[uid];
-
-      let name = value.name;
-      let profilePicture = await this.storagePathToURL(value.profilePicture);
-
-      return {
-        name,
-        id: uid,
-        profilePicture,
-        emailAddress: value.emailAddress
-      };
-    });
-  }
-
   async createConversation(user: User) {
     // Create conversation instance
-    let newConversationRef = this.db.ref("conversations").push();
+    let newConversationRef = this.state.firebase.database.ref("conversations").push();
     await newConversationRef.set({
       participants: [
-        this.state.user?.id,
+        this.state.firebase.user?.id,
         user.id
       ]
     });
@@ -359,7 +326,7 @@ class App extends React.Component<{}, AppState> {
     await this.userRef?.child("conversations").push().set(newConversationRef.key);
 
     // Add conversation to recipient user
-    await this.db.ref(`users/${user.id}/conversations`).push().set(newConversationRef.key);
+    await this.state.firebase.database.ref(`users/${user.id}/conversations`).push().set(newConversationRef.key);
 
     // Select the conversation
     this.selectConversation(newConversationRef.key || "");
@@ -372,34 +339,30 @@ class App extends React.Component<{}, AppState> {
   }
 
   render() {
-    if (this.state !== null && this.state.user !== null) {
+    if (this.state !== null && this.state.firebase.user !== null) {
       let appClass: string;
       if (this.state.mobile) appClass = this.state.activeChat ? "App rightColumn" : "App leftColumn";
       else appClass = "App";
 
       return (
-        <div className={appClass}>
-          <Menu
-            user={this.state.user}
-            searchCallback={this.toggleSearchBar} />
-          <ConversationHeader
-            recipientUser={this.state.activeChat?.recipient}
-            showBackButton={this.state.mobile}
-            back={this.disableActive} />
-          <Chats
-            chats={this.state.chats}
-            user={this.state.user}
-            activeID={this.state.activeChat?.id}
-            selectCallback={this.selectConversation}
-            searchBarActive={this.state.searchBarActive}
-            getUserByEmail={this.getUserByEmail}
-            createConversation={this.createConversation} />
-          <Conversation
-            chat={this.state.activeChat}
-            user={this.state.user}
-            readCallback={this.markMessageAsRead}
-            sendCallback={this.sendMessage} />
-        </div>
+        <FirebaseContext.Provider value={this.state.firebase}>
+          <div className={appClass}>
+            <Menu
+              searchCallback={this.toggleSearchBar} />
+            <ConversationHeader
+              recipientUser={this.state.activeChat?.recipient}
+              showBackButton={this.state.mobile}
+              back={this.disableActive} />
+            <Chats
+              chats={this.state.chats}
+              activeID={this.state.activeChat?.id}
+              selectCallback={this.selectConversation}
+              searchBarActive={this.state.searchBarActive}
+              createConversation={this.createConversation} />
+            <Conversation
+              chat={this.state.activeChat} />
+          </div>
+        </FirebaseContext.Provider>
       );
     } else {
       return (

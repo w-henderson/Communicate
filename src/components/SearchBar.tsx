@@ -1,10 +1,10 @@
 import React from "react";
 import Icon from './Icon';
+import FirebaseContext from "../contexts/FirebaseContext";
 import '../styles/SearchBar.scss';
 
 interface SearchBarProps {
   hidden: boolean,
-  getUserByEmail: (email: string) => Promise<User | null>,
   createConversation: (recipient: User) => void
 }
 
@@ -25,8 +25,31 @@ class SearchBar extends React.Component<SearchBarProps, SearchBarState> {
     };
 
     this.checkForSubmit = this.checkForSubmit.bind(this);
+    this.getUserByEmail = this.getUserByEmail.bind(this);
     this.submit = this.submit.bind(this);
     this.wasHidden = false;
+  }
+
+  getUserByEmail(email: string): Promise<User | null> {
+    if (email === this.context.user?.emailAddress) return Promise.resolve(null);
+
+    let ref = this.context.database.ref("users").orderByChild("emailAddress").equalTo(email);
+    return ref.once("value").then(async snapshot => {
+      let value = snapshot.val();
+      if (value === null) return null;
+      let uid = Object.keys(value)[0];
+      value = value[uid];
+
+      let name = value.name;
+      let profilePicture = await this.context.storage.ref(value.profilePicture).getDownloadURL();
+
+      return {
+        name,
+        id: uid,
+        profilePicture,
+        emailAddress: value.emailAddress
+      };
+    });
   }
 
   checkForSubmit(e: React.KeyboardEvent) {
@@ -35,7 +58,7 @@ class SearchBar extends React.Component<SearchBarProps, SearchBarState> {
   }
 
   async submit() {
-    let recipient = await this.props.getUserByEmail(this.state.query);
+    let recipient = await this.getUserByEmail(this.state.query);
     if (recipient !== null) {
       this.props.createConversation(recipient);
       this.setState({ query: "", showingRedOutline: false });
@@ -67,5 +90,7 @@ class SearchBar extends React.Component<SearchBarProps, SearchBarState> {
     }
   }
 }
+
+SearchBar.contextType = FirebaseContext;
 
 export default SearchBar;

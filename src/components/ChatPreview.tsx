@@ -1,17 +1,17 @@
 import React from "react";
+import FirebaseContext from "../contexts/FirebaseContext";
 import humanize from '../DateHumanizer';
 
 interface ChatPreviewProps {
   chat: Chat,
-  user: User | null,
   active: boolean,
   selectCallback: () => void
 }
 
 class ChatPreview extends React.Component<ChatPreviewProps> {
   render() {
-    let unread = this.props.user !== null
-      && !this.props.chat.mostRecentMessage?.readUsers.includes(this.props.user)
+    let unread = this.context.user !== null
+      && !this.props.chat.mostRecentMessage?.readUsers.includes(this.context.user)
       && this.props.chat.mostRecentMessage;
     let content = this.props.chat.mostRecentMessage?.content || (<i>No messages in this conversation</i>);
     let date = humanize(new Date(this.props.chat.mostRecentMessage?.timestamp || 0));
@@ -31,5 +31,7 @@ class ChatPreview extends React.Component<ChatPreviewProps> {
     );
   }
 }
+
+ChatPreview.contextType = FirebaseContext;
 
 export default ChatPreview;

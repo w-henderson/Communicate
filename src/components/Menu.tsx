@@ -2,8 +2,9 @@ import React from "react";
 import Icon from './Icon';
 import '../styles/Menu.scss';
 
+import FirebaseContext from "../contexts/FirebaseContext";
+
 interface MenuProps {
-  user: User | null,
   searchCallback: () => void
 }
 
@@ -11,7 +12,7 @@ class Menu extends React.Component<MenuProps> {
   render() {
     return (
       <div className="Menu">
-        <img src={this.props.user?.profilePicture} alt="Profile" />
+        <img src={this.context.user?.profilePicture} alt="Profile" />
         <div>
           <Icon onClick={this.props.searchCallback}>chat-dots-fill</Icon>
           <Icon>gear-fill</Icon>
@@ -20,5 +21,7 @@ class Menu extends React.Component<MenuProps> {
     );
   }
 }
+
+Menu.contextType = FirebaseContext;
 
 export default Menu;

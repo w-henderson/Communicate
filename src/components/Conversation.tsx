@@ -1,13 +1,11 @@
 import React from "react";
 import Message from "./Message";
 import Icon from "./Icon";
+import FirebaseContext from "../contexts/FirebaseContext";
 import '../styles/Conversation.scss';
 
 interface ConversationProps {
-  chat: FullChat | null,
-  user: User,
-  readCallback: (conversationID: string, messageID: string) => void,
-  sendCallback: (message: string) => void
+  chat: FullChat | null
 }
 
 interface ConversationState {
@@ -20,6 +18,9 @@ class Conversation extends React.Component<ConversationProps, ConversationState>
     this.state = {
       message: ""
     };
+
+    this.sendMessage = this.sendMessage.bind(this);
+    this.preSend = this.preSend.bind(this);
   }
 
   preSend(e: React.KeyboardEvent) {
@@ -27,7 +28,15 @@ class Conversation extends React.Component<ConversationProps, ConversationState>
   }
 
   sendMessage() {
-    this.props.sendCallback(this.state.message);
+    let newMessage = {
+      content: this.state.message,
+      readUsers: [this.context.user?.id],
+      sender: this.context.user?.id,
+      timestamp: new Date().getTime()
+    };
+
+    let newMessageRef = this.context.database.ref(`conversations/${this.props.chat?.id}/messages`).push();
+    newMessageRef.set(newMessage);
     this.setState({ message: "" });
   }
 
@@ -40,8 +49,7 @@ class Conversation extends React.Component<ConversationProps, ConversationState>
               <Message
                 key={index}
                 message={value}
-                user={this.props.user}
-                readCallback={() => this.props.readCallback(this.props.chat?.id || "-1", value.id)} />
+                conversationID={this.props.chat?.id || ""} />
             )}
           </div>
 
@@ -49,9 +57,9 @@ class Conversation extends React.Component<ConversationProps, ConversationState>
             <input
               placeholder="Type a message"
               onChange={(e) => this.setState({ message: e.target.value })}
-              onKeyDown={this.preSend.bind(this)}
+              onKeyDown={this.preSend}
               value={this.state.message} />
-            <Icon onClick={this.sendMessage.bind(this)}>cursor-fill</Icon>
+            <Icon onClick={this.sendMessage}>cursor-fill</Icon>
           </div>
         </div>
       );
@@ -65,5 +73,7 @@ class Conversation extends React.Component<ConversationProps, ConversationState>
     }
   }
 }
+
+Conversation.contextType = FirebaseContext;
 
 export default Conversation;
