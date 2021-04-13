@@ -37,7 +37,7 @@ div.SignIn {
     transition: filter 100ms;
 
     &:active {
-      filter: drop-shadow(var(--shadow-wide)) brightness(90%);
+      filter: drop-shadow(var(--shadow-wide)) contrast(80%);
     }
   }
 }

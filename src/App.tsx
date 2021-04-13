@@ -17,7 +17,8 @@ import "firebase/storage";
 interface AppState {
   user: User | null,
   chats: Chat[],
-  activeChat: FullChat | null
+  activeChat: FullChat | null,
+  searchBarActive: boolean
 };
 
 class App extends React.Component<{}, AppState> {
@@ -58,6 +59,7 @@ class App extends React.Component<{}, AppState> {
     this.newMessageHandler = this.newMessageHandler.bind(this);
     this.markMessageAsRead = this.markMessageAsRead.bind(this);
     this.sendMessage = this.sendMessage.bind(this);
+    this.toggleSearchBar = this.toggleSearchBar.bind(this);
 
     this.chatRefs = [];
   }
@@ -79,7 +81,8 @@ class App extends React.Component<{}, AppState> {
       return {
         name,
         id: uid,
-        profilePicture
+        profilePicture,
+        emailAddress: value.emailAddress
       };
     });
   }
@@ -135,8 +138,9 @@ class App extends React.Component<{}, AppState> {
       await profilePictureRef.put(profilePicture);
 
       this.userRef?.set({
-        name: this.state.user?.name,
-        profilePicture: `users/${snapshot.key}.jpg`
+        name: this.state.user.name,
+        profilePicture: `users/${snapshot.key}.jpg`,
+        emailAddress: this.state.user.emailAddress
       });
 
       return;
@@ -145,7 +149,8 @@ class App extends React.Component<{}, AppState> {
     let self: User = {
       name: val.name || "User",
       id: snapshot.key || "",
-      profilePicture: (await this.storagePathToURL(val.profilePicture)) || defaultProfilePicture
+      profilePicture: (await this.storagePathToURL(val.profilePicture)) || defaultProfilePicture,
+      emailAddress: val.emailAddress
     }
 
     this.setState({
@@ -163,28 +168,36 @@ class App extends React.Component<{}, AppState> {
         let lastMessage = (await chatRef.child("messages").limitToLast(1).once("value")).val();
         let senderUser = (await this.db.ref(`users/${remoteParticipant}`).once("value")).val();
 
-        let lastMessageID = Object.keys(lastMessage)[0];
-        lastMessage = lastMessage[lastMessageID];
-
         let sender: User = {
           name: senderUser.name,
           id: remoteParticipant || "",
-          profilePicture: await this.storagePathToURL(senderUser.profilePicture)
+          profilePicture: await this.storagePathToURL(senderUser.profilePicture),
+          emailAddress: senderUser.emailAddress
         }
 
-        // TODO: allow for more than 2 users
-        let readUsers: User[] = lastMessage.readUsers.map(user => user === self.id ? self : sender);
+        let mostRecentMessage: UserMessage | null;
+        if (lastMessage) {
+          let lastMessageID = Object.keys(lastMessage)[0];
+          lastMessage = lastMessage[lastMessageID];
 
-        newChatsState.push({
-          recipient: sender,
-          id: chatRef.key || "",
-          mostRecentMessage: {
+          // TODO: allow for more than 2 users
+          let readUsers: User[] = lastMessage.readUsers.map(user => user === self.id ? self : sender);
+
+          mostRecentMessage = {
             id: lastMessageID,
             content: lastMessage.content,
             sender: lastMessage.sender === remoteParticipant ? sender : self,
             timestamp: lastMessage.timestamp,
             readUsers
           }
+        } else {
+          mostRecentMessage = null;
+        }
+
+        newChatsState.push({
+          recipient: sender,
+          id: chatRef.key || "",
+          mostRecentMessage
         });
       }
 
@@ -213,23 +226,26 @@ class App extends React.Component<{}, AppState> {
     let oldStateIndex = oldState.findIndex(value => value.id === id);
 
     let val = snapshot.val();
-    let lastMessageID = Object.keys(val)[0];
-    val = val[lastMessageID];
 
-    let readUsers: User[] = val.readUsers.map(user =>
-      user === this.state.user?.id ? this.state.user : oldState[oldStateIndex].recipient);
+    if (val) {
+      let lastMessageID = Object.keys(val)[0];
+      val = val[lastMessageID];
 
-    oldState[oldStateIndex].mostRecentMessage = {
-      id: lastMessageID,
-      content: val.content,
-      sender: oldState[oldStateIndex].recipient,
-      timestamp: val.timestamp,
-      readUsers
-    };
+      let readUsers: User[] = val.readUsers.map(user =>
+        user === this.state.user?.id ? this.state.user : oldState[oldStateIndex].recipient);
 
-    this.setState({
-      chats: oldState
-    });
+      oldState[oldStateIndex].mostRecentMessage = {
+        id: lastMessageID,
+        content: val.content,
+        sender: oldState[oldStateIndex].recipient,
+        timestamp: val.timestamp,
+        readUsers
+      };
+
+      this.setState({
+        chats: oldState
+      });
+    }
   }
 
   signIn(provider: "Google" | "GitHub") {
@@ -241,11 +257,20 @@ class App extends React.Component<{}, AppState> {
 
   updateAuthDisplay(user: firebase.User | null) {
     if (user !== null) {
+      let displayName = user.displayName || prompt("Choose a display name:");
+      let emailAddress = user.email || prompt("Enter your email address:");
+
+      if (displayName === null || emailAddress === null) {
+        this.updateAuthDisplay(user);
+        return;
+      }
+
       this.setState({
         user: {
-          name: user.displayName || "User",
+          name: displayName,
           id: user.uid,
-          profilePicture: user.photoURL || defaultProfilePicture
+          profilePicture: user.photoURL || defaultProfilePicture,
+          emailAddress,
         }
       }, () => {
         this.userRef = this.db.ref(`users/${user.uid}`);
@@ -253,6 +278,11 @@ class App extends React.Component<{}, AppState> {
         console.log("set up listener");
       });
     }
+  }
+
+  toggleSearchBar() {
+    let currentSearchBarState = this.state.searchBarActive;
+    this.setState({ searchBarActive: !currentSearchBarState });
   }
 
   sendMessage(message: string) {
@@ -271,10 +301,22 @@ class App extends React.Component<{}, AppState> {
     if (this.state !== null && this.state.user !== null) {
       return (
         <div className="App">
-          <Menu user={this.state.user} />
-          <ConversationHeader recipientUser={this.state.activeChat?.recipient} />
-          <Chats chats={this.state.chats} user={this.state.user} activeID={this.state.activeChat?.id} selectCallback={this.selectConversation} />
-          <Conversation chat={this.state.activeChat} user={this.state.user} readCallback={this.markMessageAsRead} sendCallback={this.sendMessage} />
+          <Menu
+            user={this.state.user}
+            searchCallback={this.toggleSearchBar} />
+          <ConversationHeader
+            recipientUser={this.state.activeChat?.recipient} />
+          <Chats
+            chats={this.state.chats}
+            user={this.state.user}
+            activeID={this.state.activeChat?.id}
+            selectCallback={this.selectConversation}
+            searchBarActive={this.state.searchBarActive} />
+          <Conversation
+            chat={this.state.activeChat}
+            user={this.state.user}
+            readCallback={this.markMessageAsRead}
+            sendCallback={this.sendMessage} />
         </div>
       );
     } else {

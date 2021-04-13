@@ -1,7 +1,8 @@
 interface User {
   name: string,
   id: string,
-  profilePicture: string
+  profilePicture: string,
+  emailAddress: string
 }
 
 interface UserMessage {
@@ -15,7 +16,7 @@ interface UserMessage {
 interface Chat {
   recipient: User,
   id: string,
-  mostRecentMessage: UserMessage
+  mostRecentMessage: UserMessage | null
 }
 
 interface FullChat {
