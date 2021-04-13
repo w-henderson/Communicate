@@ -28,6 +28,10 @@ div.SearchBar {
     box-shadow: none;
     transition: box-shadow 250ms;
     &:focus { box-shadow: var(--shadow-light); }
+
+    &.incorrect {
+      border: 2px solid rgba(255, 0, 0, 0.5);
+    }
   }
 
   i {

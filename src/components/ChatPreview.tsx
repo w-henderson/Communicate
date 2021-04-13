@@ -14,13 +14,15 @@ class ChatPreview extends React.Component<ChatPreviewProps> {
       && !this.props.chat.mostRecentMessage?.readUsers.includes(this.props.user)
       && this.props.chat.mostRecentMessage;
     let content = this.props.chat.mostRecentMessage?.content || (<i>No messages in this conversation</i>);
+    let date = humanize(new Date(this.props.chat.mostRecentMessage?.timestamp || 0));
+    if (date === "01/01/70") date = ""; // if timestamp is 0 or null or undefined, just hide it
 
     return (
       <div className={this.props.active ? "ChatPreview active" : "ChatPreview"} onClick={() => this.props.selectCallback()}>
         <img src={this.props.chat.recipient.profilePicture} alt="Recipient profile" />
         <span className={unread ? "recipientName unread" : "recipientName"}>{this.props.chat.recipient.name}</span>
         <span className="latestMessage">{content}</span>
-        <span className="messageDate">{humanize(new Date(this.props.chat.mostRecentMessage?.timestamp || 0))}</span>
+        <span className="messageDate">{date}</span>
 
         {unread &&
           <span className="unreadBubble"></span>

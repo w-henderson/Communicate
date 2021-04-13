@@ -60,6 +60,8 @@ class App extends React.Component<{}, AppState> {
     this.markMessageAsRead = this.markMessageAsRead.bind(this);
     this.sendMessage = this.sendMessage.bind(this);
     this.toggleSearchBar = this.toggleSearchBar.bind(this);
+    this.getUserByEmail = this.getUserByEmail.bind(this);
+    this.createConversation = this.createConversation.bind(this);
 
     this.chatRefs = [];
   }
@@ -129,8 +131,6 @@ class App extends React.Component<{}, AppState> {
   async userListener(snapshot: firebase.database.DataSnapshot) {
     let val = snapshot.val();
 
-    console.log(val);
-
     if (val === null && this.state.user !== null) {
       let profilePictureRef = this.storage.ref(`users/${snapshot.key}.jpg`);
       let profilePicture = await (await fetch(this.state.user.profilePicture)).blob();
@@ -159,7 +159,7 @@ class App extends React.Component<{}, AppState> {
 
     // Add shallow listeners for each conversation
     if (val.conversations) {
-      this.chatRefs = val.conversations.map(id => this.db.ref(`conversations/${id}`));
+      this.chatRefs = Object.values(val.conversations).map(id => this.db.ref(`conversations/${id}`));
 
       let newChatsState: Chat[] = [];
       for (let chatRef of this.chatRefs) {
@@ -204,8 +204,8 @@ class App extends React.Component<{}, AppState> {
       this.setState({
         chats: newChatsState
       }, () => {
-        for (let chatRef of val.conversations.map(id => this.db.ref(`conversations/${id}`))) {
-          chatRef.child("messages").limitToLast(1).on("value", (e) => this.conversationPreviewUpdate(e, chatRef.key));
+        for (let chatRef of this.chatRefs) {
+          chatRef.child("messages").limitToLast(1).on("value", (e) => this.conversationPreviewUpdate(e, chatRef.key || ""));
         }
       });
     }
@@ -242,6 +242,16 @@ class App extends React.Component<{}, AppState> {
         readUsers
       };
 
+      oldState.sort((a, b) => {
+        if (a.mostRecentMessage && b.mostRecentMessage) {
+          return b.mostRecentMessage.timestamp - a.mostRecentMessage.timestamp;
+        } else if (a.mostRecentMessage) {
+          return 1;
+        } else {
+          return -1;
+        }
+      });
+
       this.setState({
         chats: oldState
       });
@@ -275,7 +285,6 @@ class App extends React.Component<{}, AppState> {
       }, () => {
         this.userRef = this.db.ref(`users/${user.uid}`);
         this.userRef.on("value", this.userListener);
-        console.log("set up listener");
       });
     }
   }
@@ -297,6 +306,52 @@ class App extends React.Component<{}, AppState> {
     newMessageRef.set(newMessage);
   }
 
+  getUserByEmail(email: string): Promise<User | null> {
+    let ref = this.db.ref("users").orderByChild("emailAddress").equalTo(email);
+    return ref.once("value").then(async snapshot => {
+      let value = snapshot.val();
+      if (value === null) return null;
+      let uid = Object.keys(value)[0];
+      value = value[uid];
+
+      let name = value.name;
+      let profilePicture = await this.storagePathToURL(value.profilePicture);
+
+      return {
+        name,
+        id: uid,
+        profilePicture,
+        emailAddress: value.emailAddress
+      };
+    });
+  }
+
+  async createConversation(user: User) {
+    // Create conversation instance
+    let newConversationRef = this.db.ref("conversations").push();
+    await newConversationRef.set({
+      participants: [
+        this.state.user?.id,
+        user.id
+      ]
+    });
+
+    // Add conversation to sender user
+    await this.userRef?.child("conversations").push().set(newConversationRef.key);
+
+    // Add conversation to recipient user
+    await this.db.ref(`users/${user.id}/conversations`).push().set(newConversationRef.key);
+
+    // Select the conversation
+    this.selectConversation(newConversationRef.key || "");
+    this.chatRefs.push(newConversationRef);
+    this.chatRefs[this.chatRefs.length - 1]
+      .child("messages")
+      .limitToLast(1)
+      .on("value", (e) => this.conversationPreviewUpdate(e, newConversationRef.key || ""));
+    this.setState({ searchBarActive: false });
+  }
+
   render() {
     if (this.state !== null && this.state.user !== null) {
       return (
@@ -311,7 +366,9 @@ class App extends React.Component<{}, AppState> {
             user={this.state.user}
             activeID={this.state.activeChat?.id}
             selectCallback={this.selectConversation}
-            searchBarActive={this.state.searchBarActive} />
+            searchBarActive={this.state.searchBarActive}
+            getUserByEmail={this.getUserByEmail}
+            createConversation={this.createConversation} />
           <Conversation
             chat={this.state.activeChat}
             user={this.state.user}

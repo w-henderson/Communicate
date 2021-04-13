@@ -8,7 +8,9 @@ interface ChatsProps {
   chats: Chat[],
   activeID: string | undefined,
   selectCallback: (id: string) => void,
-  searchBarActive: boolean
+  searchBarActive: boolean,
+  getUserByEmail: (email: string) => Promise<User | null>,
+  createConversation: (user: User) => void
 }
 
 class Chats extends React.Component<ChatsProps> {
@@ -16,7 +18,10 @@ class Chats extends React.Component<ChatsProps> {
     if (this.props.chats !== undefined && this.props.chats.length > 0) {
       return (
         <div className="Chats">
-          <SearchBar hidden={!this.props.searchBarActive} />
+          <SearchBar
+            hidden={!this.props.searchBarActive} 
+            getUserByEmail={this.props.getUserByEmail} 
+            createConversation={this.props.createConversation} />
 
           {this.props.chats.map((value, index) =>
             <ChatPreview
@@ -31,7 +36,10 @@ class Chats extends React.Component<ChatsProps> {
     } else {
       return (
         <div className="Chats empty">
-          <SearchBar hidden={!this.props.searchBarActive} />
+          <SearchBar
+            hidden={!this.props.searchBarActive} 
+            getUserByEmail={this.props.getUserByEmail} 
+            createConversation={this.props.createConversation} />
 
           You don't have any conversations!<br />
           Start one with the button above.
