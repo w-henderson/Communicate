@@ -307,6 +307,8 @@ class App extends React.Component<{}, AppState> {
   }
 
   getUserByEmail(email: string): Promise<User | null> {
+    if (email === this.state.user?.emailAddress) return Promise.resolve(null);
+
     let ref = this.db.ref("users").orderByChild("emailAddress").equalTo(email);
     return ref.once("value").then(async snapshot => {
       let value = snapshot.val();
