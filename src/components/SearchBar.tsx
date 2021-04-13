@@ -14,6 +14,8 @@ interface SearchBarState {
 }
 
 class SearchBar extends React.Component<SearchBarProps, SearchBarState> {
+  wasHidden: boolean;
+
   constructor(props) {
     super(props);
 
@@ -24,6 +26,7 @@ class SearchBar extends React.Component<SearchBarProps, SearchBarState> {
 
     this.checkForSubmit = this.checkForSubmit.bind(this);
     this.submit = this.submit.bind(this);
+    this.wasHidden = false;
   }
 
   checkForSubmit(e: React.KeyboardEvent) {
@@ -41,6 +44,8 @@ class SearchBar extends React.Component<SearchBarProps, SearchBarState> {
   }
 
   render() {
+    if (this.props.hidden) this.wasHidden = true;
+
     return (
       <div className={this.props.hidden ? "SearchBar hidden" : "SearchBar"}>
         <input
@@ -55,9 +60,10 @@ class SearchBar extends React.Component<SearchBarProps, SearchBarState> {
   }
 
   componentDidUpdate() {
-    if (!this.props.hidden) {
+    if (!this.props.hidden && this.wasHidden) {
       let input: HTMLElement | null = document.querySelector("div.SearchBar input");
       input?.focus();
+      this.wasHidden = false;
     }
   }
 }
