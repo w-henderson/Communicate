@@ -27,7 +27,8 @@ class App extends React.Component<{}, AppState> {
   storage: firebase.storage.Storage;
   userRef: firebase.database.Reference | undefined;
   chatRefs: firebase.database.Reference[];
-  activeMessages: firebase.database.Reference | undefined;
+  activeMessagesRef: firebase.database.Reference | undefined;
+  activeMessagesListener: ((a: firebase.database.DataSnapshot | null, b?: string | null | undefined) => any) | undefined;
 
   constructor(props) {
     super(props);
@@ -91,8 +92,8 @@ class App extends React.Component<{}, AppState> {
 
   async selectConversation(id: string) {
     let mainRef = this.db.ref(`conversations/${id}`);
-    if (this.activeMessages) this.activeMessages.off();
-    this.activeMessages = this.db.ref(`conversations/${id}/messages`);
+    if (this.activeMessagesListener && this.activeMessagesRef) this.activeMessagesRef.off("child_added", this.activeMessagesListener);
+    this.activeMessagesRef = this.db.ref(`conversations/${id}/messages`);
 
     let val = (await mainRef.once("value")).val();
     let recipientID = val.participants.find(value => value !== this.state.user?.id);
@@ -105,7 +106,7 @@ class App extends React.Component<{}, AppState> {
         messages: []
       }
     }, () => {
-      this.activeMessages?.on("child_added", this.newMessageHandler);
+      this.activeMessagesListener = this.activeMessagesRef?.on("child_added", this.newMessageHandler);
     });
   }
 
