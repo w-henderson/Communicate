@@ -2,7 +2,7 @@ import React from "react";
 import Icon from './Icon';
 import '../styles/Menu.scss';
 
-import FirebaseContext from "../contexts/FirebaseContext";
+import FirebaseContext from "../firebase/FirebaseContext";
 
 interface MenuProps {
   searchCallback: () => void

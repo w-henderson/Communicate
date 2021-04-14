@@ -1,5 +1,5 @@
 import React from "react";
-import FirebaseContext from "../contexts/FirebaseContext";
+import FirebaseContext from "../firebase/FirebaseContext";
 import humanize from '../DateHumanizer';
 
 interface ChatPreviewProps {

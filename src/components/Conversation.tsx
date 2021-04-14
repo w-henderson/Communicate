@@ -1,7 +1,7 @@
 import React from "react";
 import Message from "./Message";
 import Icon from "./Icon";
-import FirebaseContext from "../contexts/FirebaseContext";
+import FirebaseContext from "../firebase/FirebaseContext";
 import '../styles/Conversation.scss';
 
 interface ConversationProps {

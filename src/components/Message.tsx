@@ -1,6 +1,6 @@
 import React from "react";
 import Icon from "./Icon";
-import FirebaseContext from "../contexts/FirebaseContext";
+import FirebaseContext from "../firebase/FirebaseContext";
 
 interface MessageProps {
   message: UserMessage,
