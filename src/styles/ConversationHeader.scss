@@ -22,18 +22,7 @@ div.ConversationHeader {
     font-size: 16px;
   }
 
-  i {
-    font-size: 28px !important;
-    color: var(--accent);
-    opacity: 0.4;
-    transition: opacity 100ms;
-    &:hover { opacity: 0.6; }
-
-    cursor: pointer;
-    user-select: none;
-
-    &:first-child {
-      margin-right: 8px;
-    }
+  i:first-child {
+    margin-right: 8px;
   }
 }

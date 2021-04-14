@@ -6,6 +6,7 @@ div.App {
   background-color: var(--lightest);
   border-radius: 4px;
   box-shadow: var(--shadow-wide);
+  overflow: hidden;
 
   display: grid;
   grid-template-columns: 30% 70%;
@@ -21,7 +22,7 @@ div.App {
     max-width: calc(100% - 48px);
   }
 
-  @media only screen and (orientation: portrait) {
+  @media only screen and (max-width: 600px) {
     max-height: unset;
     max-width: unset;
   }

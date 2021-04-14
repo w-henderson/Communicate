@@ -54,13 +54,14 @@ div.Conversation {
     border-top: 1px solid var(--mid);
 
     input {
-      flex-grow: 1;
+      flex: 1;
       height: 100%;
       font-size: 18px;
       border: 1px solid var(--mid);
       border-radius: 24px;
       outline: none;
       padding: 0 16px;
+      min-width: 0;
 
       background-color: var(--lightest);
       font-family: Inter;
@@ -71,15 +72,7 @@ div.Conversation {
     }
 
     i {
-      font-size: 28px;
       margin: 0 8px 4px 16px;
-      color: var(--accent);
-      opacity: 0.4;
-      transition: opacity 100ms;
-      &:hover { opacity: 0.6; }
-
-      cursor: pointer;
-      user-select: none;
     }
   }
 

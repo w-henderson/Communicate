@@ -17,8 +17,8 @@ import "firebase/storage";
 import FirebaseContext, { FirebaseUtils } from "./contexts/FirebaseContext";
 
 interface AppState {
-  chats: Chat[],
-  activeChat: FullChat | null,
+  chats: Chat[] | undefined,
+  activeChat: FullChat | null | undefined,
   searchBarActive: boolean,
   mobile: boolean,
   firebase: FirebaseUtils
@@ -48,7 +48,7 @@ class App extends React.Component<{}, AppState> {
     }
 
     this.state = {
-      chats: [],
+      chats: undefined,
       activeChat: null,
       searchBarActive: false,
       mobile: false,
@@ -77,12 +77,12 @@ class App extends React.Component<{}, AppState> {
   componentDidMount() {
     this.state.firebase.auth.onAuthStateChanged(this.updateAuthDisplay);
     this.setState({
-      mobile: window.matchMedia("(orientation:portrait)").matches
+      mobile: window.matchMedia("(max-width: 600px)").matches
     });
 
     window.onresize = () => {
       this.setState({
-        mobile: window.matchMedia("(orientation:portrait)").matches
+        mobile: window.matchMedia("(max-width: 600px)").matches
       });
     }
   }
@@ -107,6 +107,8 @@ class App extends React.Component<{}, AppState> {
   }
 
   async selectConversation(id: string) {
+    this.setState({ activeChat: undefined });
+
     let mainRef = this.state.firebase.database.ref(`conversations/${id}`);
     if (this.activeMessagesListener && this.activeMessagesRef) this.activeMessagesRef.off("child_added", this.activeMessagesListener);
     this.activeMessagesRef = this.state.firebase.database.ref(`conversations/${id}/messages`);
@@ -237,6 +239,8 @@ class App extends React.Component<{}, AppState> {
   }
 
   conversationPreviewUpdate(snapshot: firebase.database.DataSnapshot, id: string) {
+    if (this.state.chats === undefined) return;
+
     let oldState = this.state.chats;
     let oldStateIndex = oldState.findIndex(value => value.id === id);
 
@@ -341,7 +345,7 @@ class App extends React.Component<{}, AppState> {
   render() {
     if (this.state !== null && this.state.firebase.user !== null) {
       let appClass: string;
-      if (this.state.mobile) appClass = this.state.activeChat ? "App rightColumn" : "App leftColumn";
+      if (this.state.mobile) appClass = this.state.activeChat !== null ? "App rightColumn" : "App leftColumn";
       else appClass = "App";
 
       return (

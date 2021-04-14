@@ -40,6 +40,9 @@ div.Chats {
     grid-template-rows: 32px 1fr;
     row-gap: 2px;
 
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+
     img {
       height: 60px;
       width: 60px;

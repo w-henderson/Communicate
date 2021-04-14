@@ -5,7 +5,7 @@ import FirebaseContext from "../contexts/FirebaseContext";
 import '../styles/Conversation.scss';
 
 interface ConversationProps {
-  chat: FullChat | null
+  chat: FullChat | null | undefined
 }
 
 interface ConversationState {
@@ -63,11 +63,17 @@ class Conversation extends React.Component<ConversationProps, ConversationState>
           </div>
         </div>
       );
-    } else {
+    } else if (this.props.chat === null) {
       return (
         <div className="Conversation empty">
           Welcome to Communicate!<br />
           Select a conversation from the left to start.
+        </div>
+      )
+    } else {
+      return (
+        <div className="Conversation empty">
+          <Icon spin={true}>arrow-repeat</Icon>
         </div>
       )
     }

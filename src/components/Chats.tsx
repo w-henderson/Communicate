@@ -1,10 +1,11 @@
 import React from "react";
 import ChatPreview from './ChatPreview';
 import SearchBar from './SearchBar';
+import Icon from './Icon';
 import '../styles/Chats.scss';
 
 interface ChatsProps {
-  chats: Chat[],
+  chats: Chat[] | undefined,
   activeID: string | undefined,
   selectCallback: (id: string) => void,
   searchBarActive: boolean,
@@ -29,7 +30,7 @@ class Chats extends React.Component<ChatsProps> {
           )}
         </div>
       );
-    } else {
+    } else if (this.props.chats !== undefined) {
       return (
         <div className="Chats empty">
           <SearchBar
@@ -38,6 +39,16 @@ class Chats extends React.Component<ChatsProps> {
 
           You don't have any conversations!<br />
           Start one with the button above.
+        </div>
+      )
+    } else {
+      return (
+        <div className="Chats empty">
+          <SearchBar
+            hidden={!this.props.searchBarActive} 
+            createConversation={this.props.createConversation} />
+
+          <Icon spin={true}>arrow-repeat</Icon>
         </div>
       )
     }

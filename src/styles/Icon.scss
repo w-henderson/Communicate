@@ -1,0 +1,23 @@
+i.bi {
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  font-size: 28px;
+  color: var(--accent);
+  opacity: 0.4;
+  transition: opacity 100ms;
+  &:hover { opacity: 0.6; }
+
+  cursor: pointer;
+
+  &.spin {
+    display: inline-block;
+    animation: spin linear 1s infinite;
+    font-size: 32px !important;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
