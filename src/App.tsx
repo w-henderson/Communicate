@@ -29,6 +29,7 @@ class App extends React.Component<{}, AppState> {
   chatRefs: firebase.database.Reference[];
   activeMessagesRef: firebase.database.Reference | undefined;
   activeMessagesListener: ((a: firebase.database.DataSnapshot | null, b?: string | null | undefined) => any) | undefined;
+  messageUpdateListener: ((a: firebase.database.DataSnapshot | null, b?: string | null | undefined) => any) | undefined;
 
   constructor(props) {
     super(props);
@@ -70,6 +71,7 @@ class App extends React.Component<{}, AppState> {
     this.toggleSearchBar = this.toggleSearchBar.bind(this);
     this.createConversation = this.createConversation.bind(this);
     this.disableActive = this.disableActive.bind(this);
+    this.messageUpdateHandler = this.messageUpdateHandler.bind(this);
 
     this.chatRefs = [];
   }
@@ -110,7 +112,10 @@ class App extends React.Component<{}, AppState> {
     this.setState({ activeChat: undefined });
 
     let mainRef = this.state.firebase.database.ref(`conversations/${id}`);
-    if (this.activeMessagesListener && this.activeMessagesRef) this.activeMessagesRef.off("child_added", this.activeMessagesListener);
+    if (this.activeMessagesListener && this.activeMessagesRef) {
+      this.activeMessagesRef.off("child_added", this.activeMessagesListener);
+      this.activeMessagesRef.off("child_changed", this.messageUpdateHandler);
+    }
     this.activeMessagesRef = this.state.firebase.database.ref(`conversations/${id}/messages`);
 
     let val = (await mainRef.once("value")).val();
@@ -125,11 +130,15 @@ class App extends React.Component<{}, AppState> {
       }
     }, () => {
       this.activeMessagesListener = this.activeMessagesRef?.on("child_added", this.newMessageHandler);
+      this.messageUpdateListener = this.activeMessagesRef?.on("child_changed", this.messageUpdateHandler);
     });
   }
 
   disableActive() {
-    if (this.activeMessagesListener && this.activeMessagesRef) this.activeMessagesRef.off("child_added", this.activeMessagesListener);
+    if (this.activeMessagesListener && this.activeMessagesRef) {
+      this.activeMessagesRef.off("child_added", this.activeMessagesListener);
+      this.activeMessagesRef.off("child_changed", this.messageUpdateHandler);
+    }
     this.setState({ activeChat: null });
   }
 
@@ -137,13 +146,15 @@ class App extends React.Component<{}, AppState> {
     let val = snapshot.val();
     let sender = val.sender === this.state.firebase.user?.id ? this.state.firebase.user : this.state.activeChat?.recipient;
 
+    let readUsers: User[] = val.readUsers.map(value => value === this.state.firebase.user?.id ? this.state.firebase.user : sender);
+
     let oldActiveChat = this.state.activeChat;
     if (this.state.firebase.user === null) return;
     oldActiveChat?.messages.push({
       id: snapshot.key || "-1",
       content: val.content,
       sender: sender || this.state.firebase.user,
-      readUsers: [],
+      readUsers,
       timestamp: val.timestamp
     });
 
@@ -236,6 +247,24 @@ class App extends React.Component<{}, AppState> {
         }
       });
     }
+  }
+
+  messageUpdateHandler(snapshot: firebase.database.DataSnapshot) {
+    let val = snapshot.val();
+    let messageIndex = this.state.activeChat?.messages.findIndex(value => value.id === snapshot.key);
+    let sender = this.state.activeChat?.recipient;
+    let readUsers: User[] = val.readUsers.map(value => value === this.state.firebase.user?.id ? this.state.firebase.user : sender);
+
+    let oldActiveChat = this.state.activeChat;
+    let oldMessage = this.state.activeChat?.messages[messageIndex || -1];
+    if (!oldMessage || !oldActiveChat || !this.state.firebase.user) return;
+    if (this.state.firebase.user === null) return;
+    oldMessage.readUsers = readUsers;
+    oldActiveChat.messages[messageIndex || -1] = oldMessage;
+
+    this.setState({
+      activeChat: oldActiveChat
+    });
   }
 
   conversationPreviewUpdate(snapshot: firebase.database.DataSnapshot, id: string) {

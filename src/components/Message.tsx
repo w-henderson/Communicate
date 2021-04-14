@@ -1,4 +1,5 @@
 import React from "react";
+import Icon from "./Icon";
 import FirebaseContext from "../contexts/FirebaseContext";
 
 interface MessageProps {
@@ -26,6 +27,7 @@ class Message extends React.Component<MessageProps> {
           <div className="messageTime">
             {timeString}
           </div>
+          <Icon>{this.props.message.readUsers.length > 1 ? "check-all" : "check"}</Icon>
           <div className="messageContent">
             {this.props.message.content}
           </div>

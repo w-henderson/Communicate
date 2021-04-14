@@ -28,6 +28,8 @@ class Conversation extends React.Component<ConversationProps, ConversationState>
   }
 
   sendMessage() {
+    if (this.state.message.trim() === "") return;
+
     let newMessage = {
       content: this.state.message,
       readUsers: [this.context.user?.id],
