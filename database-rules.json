@@ -1,0 +1,33 @@
+{
+  "rules": {
+    "users": {
+      ".read": "query.orderByChild === 'emailAddress'",
+      "$uid": {
+        ".read": "true",
+        "name": {
+          ".write": "$uid === auth.uid"
+        },
+        "emailAddress": {
+          ".write": "$uid === auth.uid"
+        },
+        "profilePicture": {
+          ".write": "$uid === auth.uid"
+        },
+        "conversations": {
+          "$index": {
+            ".write": "(!data.exists() || !newData.exists())"
+          }
+        }
+      },
+      ".indexOn": [
+        "emailAddress"
+      ]
+    },
+    "conversations": {
+      "$conversationID": {
+        ".read": "data.child('participants').child('0').val() === auth.uid || data.child('participants').child('1').val() === auth.uid",
+        ".write": "!data.exists() || data.child('participants').child('0').val() === auth.uid || data.child('participants').child('1').val() === auth.uid"
+      }
+    }
+  }
+}
