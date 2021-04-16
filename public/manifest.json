@@ -4,11 +4,20 @@
     {
       "src": "icon.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icon_transparent.png",
+      "type": "image/png",
+      "sizes": "256x256",
+      "purpose": "any"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "theme_color": "#7d9fe8",
-  "background_color": "#e6eaed"
+  "background_color": "#e6eaed",
+  "orientation": "portrait"
 }
