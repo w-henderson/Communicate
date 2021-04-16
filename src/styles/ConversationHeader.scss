@@ -14,15 +14,23 @@ div.ConversationHeader {
     width: 40px;
     height: 40px;
     border-radius: 50px;
+    animation: fade-in 750ms ease;
   }
 
   span {
     flex: 1;
     margin-left: 16px;
     font-size: 16px;
+    animation: fade-in 750ms ease;
   }
 
   i:first-child {
     margin-right: 8px;
+    animation: fade-in 750ms ease;
   }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }

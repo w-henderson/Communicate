@@ -66,6 +66,7 @@ class App extends React.Component<{}, AppState> {
     this.selectConversation = this.selectConversation.bind(this);
     this.toggleSearchBar = this.toggleSearchBar.bind(this);
     this.createConversation = this.createConversation.bind(this);
+    this.deleteConversation = this.deleteConversation.bind(this);
     this.disableActive = this.disableActive.bind(this);
 
     this.chatRefs = [];
@@ -175,6 +176,24 @@ class App extends React.Component<{}, AppState> {
     this.setState({ searchBarActive: false });
   }
 
+  async deleteConversation() {
+    let conversationID = this.state.activeChat?.id;
+    let otherUserID = this.state.activeChat?.recipient.id;
+
+    await this.state.firebase.database.ref(`conversations/${conversationID}`).remove();
+    for (let uid of [this.state.firebase.user?.id, otherUserID]) {
+      let conversations = (await this.state.firebase.database.ref(`users/${uid}/conversations`).once("value")).val();
+      let keyToDelete;
+      for (let key of Object.keys(conversations)) {
+        if (conversations[key] === conversationID) {
+          keyToDelete = key;
+          break;
+        }
+      }
+      await this.state.firebase.database.ref(`users/${uid}/conversations/${keyToDelete}`).remove();
+    }
+  }
+
   render() {
     if (this.state !== null && this.state.firebase.user !== null) {
       let appClass: string;
@@ -188,6 +207,7 @@ class App extends React.Component<{}, AppState> {
               searchCallback={this.toggleSearchBar} />
             <ConversationHeader
               recipientUser={this.state.activeChat?.recipient}
+              deleteConversation={this.deleteConversation}
               showBackButton={this.state.mobile}
               back={this.disableActive} />
             <Chats

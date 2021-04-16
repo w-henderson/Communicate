@@ -11,8 +11,8 @@ interface ChatPreviewProps {
 class ChatPreview extends React.Component<ChatPreviewProps> {
   render() {
     let unread = this.context.user !== null
-      && !this.props.chat.mostRecentMessage?.readUsers.includes(this.context.user)
-      && this.props.chat.mostRecentMessage;
+      && !this.props.chat.mostRecentMessage?.readUsers.map(val => val.id).includes(this.context.user.id)
+      && this.props.chat.mostRecentMessage !== null;
     let content = this.props.chat.mostRecentMessage?.content || (<i>No messages in this conversation</i>);
     let date = humanize(new Date(this.props.chat.mostRecentMessage?.timestamp || 0));
     if (date === "01/01/70") date = ""; // if timestamp is 0 or null or undefined, just hide it

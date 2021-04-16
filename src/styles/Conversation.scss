@@ -9,6 +9,7 @@ div.Conversation {
 
   div.messages {
     flex: 1;
+    overflow-x: hidden;
     overflow-y: auto;
 
     div.Message {
@@ -22,6 +23,7 @@ div.Conversation {
         padding: 10px;
         max-width: calc(100% - 80px);
         word-break: break-word;
+        animation: pop-up 500ms ease;
       }
 
       div.messageTime {
@@ -93,5 +95,21 @@ div.Conversation {
     font-size: 24px;
     font-weight: 200;
     text-align: center;
+  }
+}
+
+@keyframes pop-up {
+  0% {
+    transform: translate(0px, 8px) scale(0.8);
+    opacity: 0;
+  }
+
+  60% {
+    transform: translate(0px, -4px) scale(1.2);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(0px, 0px) scale(1);
   }
 }

@@ -43,6 +43,11 @@ async function userListener(this: App, snapshot: firebase.database.DataSnapshot)
 
   // Add shallow listeners for each conversation
   if (val.conversations) {
+    // If chat was deleted by the other user, hide it
+    if (this.state.activeChat && !Object.values(val.conversations).includes(this.state.activeChat.id)) {
+      this.disableActive();
+    }
+
     this.chatRefs = Object.values(val.conversations).map(id => this.state.firebase.database.ref(`conversations/${id}`));
 
     let newChatsState: Chat[] = [];
