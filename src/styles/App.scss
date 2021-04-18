@@ -28,6 +28,8 @@ div.App {
 }
 
 div.SignIn {
+  animation: fade-in 500ms ease;
+
   img {
     display: block;
     width: 250px;

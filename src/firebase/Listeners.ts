@@ -176,6 +176,12 @@ function authListener(this: App, user: firebase.User | null) {
       this.userRef = this.state.firebase.database.ref(`users/${user.uid}`);
       this.userRef.on("value", userListener.bind(this));
     });
+  } else {
+    let oldFirebase = this.state.firebase;
+    oldFirebase.user = null;
+    this.setState({
+      firebase: oldFirebase
+    })
   }
 }
 
