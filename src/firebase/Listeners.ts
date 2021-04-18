@@ -12,7 +12,7 @@ import "firebase/database";
 async function userListener(this: App, snapshot: firebase.database.DataSnapshot) {
   let val = snapshot.val();
 
-  if (val === null && this.state.firebase.user !== null) {
+  if (val === null && this.state.firebase.user) {
     let profilePictureRef = this.state.firebase.storage.ref(`users/${snapshot.key}.jpg`);
     let profilePicture = await (await fetch(this.state.firebase.user.profilePicture)).blob();
 
@@ -112,7 +112,7 @@ async function newMessageListener(this: App, snapshot: firebase.database.DataSna
   let readUsers: User[] = val.readUsers.map(value => value === this.state.firebase.user?.id ? this.state.firebase.user : sender);
 
   let oldActiveChat = this.state.activeChat;
-  if (this.state.firebase.user === null) return;
+  if (!this.state.firebase.user) return;
   oldActiveChat?.messages.push({
     id: snapshot.key || "-1",
     content: val.content,

@@ -7,6 +7,7 @@ import Menu from './components/Menu';
 import ConversationHeader from './components/ConversationHeader';
 import Conversation from './components/Conversation';
 import Chats from './components/Chats';
+import Icon from "./components/Icon";
 
 import firebase from "firebase/app";
 import "firebase/auth";
@@ -57,7 +58,7 @@ class App extends React.Component<{}, AppState> {
         auth: firebase.auth(),
         database: firebase.database(),
         storage: firebase.storage(),
-        user: null
+        user: undefined
       }
     };
 
@@ -195,7 +196,7 @@ class App extends React.Component<{}, AppState> {
   }
 
   render() {
-    if (this.state !== null && this.state.firebase.user !== null) {
+    if (this.state !== null && this.state.firebase.user) {
       let appClass: string;
       if (this.state.mobile) appClass = this.state.activeChat !== null ? "App rightColumn" : "App leftColumn";
       else appClass = "App";
@@ -221,11 +222,17 @@ class App extends React.Component<{}, AppState> {
           </div>
         </FirebaseContext.Provider>
       );
-    } else {
+    } else if (this.state !== null && this.state.firebase.user === null) {
       return (
         <div className="SignIn">
           <img src={googleSignInButton} alt="Sign in with Google" onClick={() => this.signIn("Google")} draggable={false} />
           <img src={githubSignInButton} alt="Sign in with GitHub" onClick={() => this.signIn("GitHub")} draggable={false} />
+        </div>
+      )
+    } else {
+      return (
+        <div className="SignIn">
+          <Icon spin={true} color="white">arrow-repeat</Icon>
         </div>
       )
     }

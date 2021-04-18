@@ -66,6 +66,8 @@ div.Conversation {
     background-color: var(--light);
     border-top: 1px solid var(--mid);
 
+    animation: fade-in 500ms ease;
+
     input {
       flex: 1;
       height: 100%;
@@ -95,21 +97,5 @@ div.Conversation {
     font-size: 24px;
     font-weight: 200;
     text-align: center;
-  }
-}
-
-@keyframes pop-up {
-  0% {
-    transform: translate(0px, 8px) scale(0.8);
-    opacity: 0;
-  }
-
-  60% {
-    transform: translate(0px, -4px) scale(1.2);
-    opacity: 1;
-  }
-
-  100% {
-    transform: translate(0px, 0px) scale(1);
   }
 }

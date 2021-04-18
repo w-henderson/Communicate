@@ -9,7 +9,7 @@ export interface FirebaseUtils {
   auth: firebase.auth.Auth,
   database: firebase.database.Database,
   storage: firebase.storage.Storage,
-  user: User | null
+  user: User | null | undefined
 }
 
 export default React.createContext<FirebaseUtils | undefined>(undefined);
