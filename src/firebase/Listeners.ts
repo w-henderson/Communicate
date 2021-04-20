@@ -42,6 +42,7 @@ async function userListener(this: App, snapshot: firebase.database.DataSnapshot)
   });
 
   // Add shallow listeners for each conversation
+  let newChatsState: Chat[] = [];
   if (val.conversations) {
     // If chat was deleted by the other user, hide it
     if (this.state.activeChat && !Object.values(val.conversations).includes(this.state.activeChat.id)) {
@@ -50,7 +51,6 @@ async function userListener(this: App, snapshot: firebase.database.DataSnapshot)
 
     this.chatRefs = Object.values(val.conversations).map(id => this.state.firebase.database.ref(`conversations/${id}`));
 
-    let newChatsState: Chat[] = [];
     for (let chatRef of this.chatRefs) {
       let participants: string[] = Object.values((await chatRef.child("participants").once("value")).val());
       let remoteParticipant = participants.find(value => value !== snapshot.key);
@@ -89,15 +89,17 @@ async function userListener(this: App, snapshot: firebase.database.DataSnapshot)
         mostRecentMessage
       });
     }
-
-    this.setState({
-      chats: newChatsState
-    }, () => {
-      for (let chatRef of this.chatRefs) {
-        chatRef.child("messages").limitToLast(1).on("value", (e) => chatPreviewListener.bind(this)(e, chatRef.key || ""));
-      }
-    });
   }
+
+  if (this.state.activeChat && newChatsState.length === 0) this.disableActive();
+
+  this.setState({
+    chats: newChatsState
+  }, () => {
+    for (let chatRef of this.chatRefs) {
+      chatRef.child("messages").limitToLast(1).on("value", (e) => chatPreviewListener.bind(this)(e, chatRef.key || ""));
+    }
+  });
 }
 
 /**
