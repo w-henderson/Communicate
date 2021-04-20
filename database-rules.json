@@ -4,6 +4,7 @@
       ".read": "query.orderByChild === 'emailAddress'",
       "$uid": {
         ".read": "true",
+        ".write": "!data.exists()",
         "name": {
           ".write": "$uid === auth.uid"
         },
