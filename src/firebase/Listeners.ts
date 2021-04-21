@@ -140,7 +140,8 @@ function messageUpdateListener(this: App, snapshot: firebase.database.DataSnapsh
   let readUsers: User[] = val.readUsers.map(value => value === this.state.firebase.user?.id ? this.state.firebase.user : sender);
 
   let oldActiveChat = this.state.activeChat;
-  let oldMessage = this.state.activeChat?.messages[messageIndex || -1];
+  let oldMessage = this.state.activeChat?.messages[messageIndex !== undefined ? messageIndex : -1];
+
   if (!oldMessage || !oldActiveChat || !this.state.firebase.user) return;
   if (this.state.firebase.user === null) return;
   oldMessage.readUsers = readUsers;
