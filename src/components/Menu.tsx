@@ -14,8 +14,8 @@ class Menu extends React.Component<MenuProps> {
       <div className="Menu">
         <img src={this.context.user?.profilePicture} alt="Profile" />
         <div>
-          <Icon onClick={this.props.searchCallback}>chat-dots-fill</Icon>
-          <Icon>gear-fill</Icon>
+          <Icon onClick={this.props.searchCallback}>chat-dots</Icon>
+          <Icon onClick={() => this.context.auth.signOut()}>box-arrow-left</Icon>
         </div>
       </div>
     );

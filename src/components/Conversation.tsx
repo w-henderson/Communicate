@@ -61,7 +61,7 @@ class Conversation extends React.Component<ConversationProps, ConversationState>
               onChange={(e) => this.setState({ message: e.target.value })}
               onKeyDown={this.preSend}
               value={this.state.message} />
-            <Icon onClick={this.sendMessage}>cursor-fill</Icon>
+            <Icon onClick={this.sendMessage}>cursor</Icon>
           </div>
         </div>
       );

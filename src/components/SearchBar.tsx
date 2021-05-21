@@ -77,7 +77,7 @@ class SearchBar extends React.Component<SearchBarProps, SearchBarState> {
           onChange={e => this.setState({ query: e.target.value })}
           onKeyDown={this.checkForSubmit}
           className={this.state.showingRedOutline ? "incorrect" : undefined} />
-        <Icon onClick={this.submit}>person-plus-fill</Icon>
+        <Icon onClick={this.submit}>person-plus</Icon>
       </div>
     );
   }

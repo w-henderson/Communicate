@@ -22,6 +22,7 @@ div.SearchBar {
     border-radius: 24px;
     outline: none;
     padding: 0 16px;
+    min-width: 0;
 
     background-color: var(--lightest);
     font-family: Inter;
