@@ -1,29 +1,60 @@
 import React from "react";
 import Message from "./Message";
+import TypingBubble from "./TypingBubble";
 import Icon from "./Icon";
 import FirebaseContext from "../firebase/FirebaseContext";
 import '../styles/Conversation.scss';
 
 interface ConversationProps {
-  chat: FullChat | null | undefined
+  chat: FullChat | null | undefined,
+  changeTypingState: (typing: boolean) => void
 }
 
 interface ConversationState {
-  message: string
+  message: string,
+  typingState: boolean,
+  lastKeyPressTimestamp: number,
 }
 
 class Conversation extends React.Component<ConversationProps, ConversationState> {
+  typingInterval: number;
+
   constructor(props) {
     super(props);
     this.state = {
-      message: ""
+      message: "",
+      typingState: false,
+      lastKeyPressTimestamp: 0
     };
 
+    this.typingInterval = 0;
     this.sendMessage = this.sendMessage.bind(this);
     this.preSend = this.preSend.bind(this);
+    this.updateTyping = this.updateTyping.bind(this);
+  }
+
+  componentDidMount() {
+    this.typingInterval = window.setInterval(this.updateTyping, 250);
+    window.onbeforeunload = () => {
+      if (this.props.chat) {
+        this.context.database.ref(`conversations/${this.props.chat?.id}/typing/${this.context.user?.id}`).set(false);
+      }
+    };
+  }
+
+  updateTyping() {
+    let timeSinceKeypress = new Date().getTime() - this.state.lastKeyPressTimestamp;
+    if (timeSinceKeypress < 2500 && !this.state.typingState) {
+      this.props.changeTypingState(true);
+      this.setState({ typingState: true });
+    } else if (timeSinceKeypress >= 2500 && this.state.typingState) {
+      this.props.changeTypingState(false);
+      this.setState({ typingState: false });
+    }
   }
 
   preSend(e: React.KeyboardEvent) {
+    this.setState({ lastKeyPressTimestamp: new Date().getTime() });
     if (e.key === "Enter") this.sendMessage();
   }
 
@@ -39,7 +70,8 @@ class Conversation extends React.Component<ConversationProps, ConversationState>
 
     let newMessageRef = this.context.database.ref(`conversations/${this.props.chat?.id}/messages`).push();
     newMessageRef.set(newMessage);
-    this.setState({ message: "" });
+    this.setState({ message: "", lastKeyPressTimestamp: 0, typingState: false });
+    this.props.changeTypingState(false);
   }
 
   render() {
@@ -53,6 +85,9 @@ class Conversation extends React.Component<ConversationProps, ConversationState>
                 message={value}
                 conversationID={this.props.chat?.id || ""} />
             )}
+            {this.props.chat.recipientTyping &&
+              <TypingBubble />
+            }
           </div>
 
           <div className="messageInput">

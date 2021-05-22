@@ -31,6 +31,8 @@ class App extends React.Component<{}, AppState> {
   activeMessagesRef: firebase.database.Reference | undefined;
   activeMessagesListener: ((a: firebase.database.DataSnapshot | null, b?: string | null | undefined) => any) | undefined;
   messageUpdateListener: ((a: firebase.database.DataSnapshot | null, b?: string | null | undefined) => any) | undefined;
+  typingRef: firebase.database.Reference | undefined;
+  typingListener: ((a: firebase.database.DataSnapshot | null, b?: string | null | undefined) => any) | undefined;
 
   constructor(props) {
     super(props);
@@ -69,6 +71,7 @@ class App extends React.Component<{}, AppState> {
     this.createConversation = this.createConversation.bind(this);
     this.deleteConversation = this.deleteConversation.bind(this);
     this.disableActive = this.disableActive.bind(this);
+    this.updateTyping = this.updateTyping.bind(this);
 
     this.chatRefs = [];
   }
@@ -106,14 +109,21 @@ class App extends React.Component<{}, AppState> {
   }
 
   async selectConversation(id: string) {
+    if (this.state.activeChat) {
+      this.state.firebase.database.ref(`conversations/${this.state.activeChat?.id}/typing/${this.state.firebase.user?.id}`).set(false);
+    }
+
     this.setState({ activeChat: undefined });
 
     let mainRef = this.state.firebase.database.ref(`conversations/${id}`);
-    if (this.activeMessagesListener && this.activeMessagesRef) {
+    if (this.activeMessagesListener && this.activeMessagesRef && this.typingRef && this.typingListener) {
       this.activeMessagesRef.off("child_added", this.activeMessagesListener);
       this.activeMessagesRef.off("child_changed", Listeners.messageUpdate.bind(this));
+      this.typingRef.off("value", this.typingListener);
     }
     this.activeMessagesRef = this.state.firebase.database.ref(`conversations/${id}/messages`);
+    this.typingRef = this.state.firebase.database.ref(`conversations/${id}/typing`);
+    this.state.firebase.database.ref(`conversations/${id}/typing/${this.state.firebase.user?.id}`).set(false);
 
     let val = (await mainRef.once("value")).val();
     let recipientID = val.participants.find(value => value !== this.state.firebase.user?.id);
@@ -122,12 +132,14 @@ class App extends React.Component<{}, AppState> {
     this.setState({
       activeChat: {
         recipient,
+        recipientTyping: false,
         id,
         messages: []
       }
     }, () => {
       this.activeMessagesListener = this.activeMessagesRef?.on("child_added", Listeners.newMessage.bind(this));
       this.messageUpdateListener = this.activeMessagesRef?.on("child_changed", Listeners.messageUpdate.bind(this));
+      this.typingListener = this.typingRef?.on("value", Listeners.typingChanged.bind(this));
     });
   }
 
@@ -158,7 +170,11 @@ class App extends React.Component<{}, AppState> {
       participants: [
         this.state.firebase.user?.id,
         user.id
-      ]
+      ],
+      typing: {
+        [this.state.firebase.user?.id || ""]: false,
+        [user.id]: false
+      }
     });
 
     // Add conversation to sender user
@@ -195,6 +211,12 @@ class App extends React.Component<{}, AppState> {
     }
   }
 
+  updateTyping(typing: boolean) {
+    if (this.state.activeChat) {
+      this.state.firebase.database.ref(`conversations/${this.state.activeChat?.id}/typing/${this.state.firebase.user?.id}`).set(typing);
+    }
+  }
+
   render() {
     if (this.state !== null && this.state.firebase.user) {
       let appClass: string;
@@ -218,7 +240,8 @@ class App extends React.Component<{}, AppState> {
               searchBarActive={this.state.searchBarActive}
               createConversation={this.createConversation} />
             <Conversation
-              chat={this.state.activeChat} />
+              chat={this.state.activeChat}
+              changeTypingState={this.updateTyping} />
           </div>
         </FirebaseContext.Provider>
       );

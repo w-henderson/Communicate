@@ -34,6 +34,21 @@ div.Conversation {
         font-weight: 200;
       }
 
+      div.typingDot {
+        display: inline-block;
+        height: 12px;
+        width: 12px;
+        margin: 4px 4px 1px 4px;
+        opacity: 0.5;
+        border-radius: 100%;
+        border: 2px solid var(--accent);
+        animation-name: bounce;
+        animation-duration: 1s;
+        animation-timing-function: ease;
+        animation-iteration-count: infinite;
+        transform: translateY(6px);
+      }
+
       i {
         cursor: unset;
         vertical-align: bottom;
@@ -98,4 +113,10 @@ div.Conversation {
     font-weight: 200;
     text-align: center;
   }
+}
+
+@keyframes bounce {
+  0% { transform: translateY(6px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(6px); }
 }

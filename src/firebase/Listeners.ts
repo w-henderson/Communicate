@@ -231,12 +231,26 @@ function chatPreviewListener(this: App, snapshot: firebase.database.DataSnapshot
   }
 }
 
+function typingChangedListener(this: App, snapshot: firebase.database.DataSnapshot) {
+  let val = snapshot.val();
+  if (this.state.activeChat && val !== null && val.hasOwnProperty(this.state.activeChat.recipient.id) && val[this.state.activeChat.recipient.id]) {
+    let oldActiveChat = this.state.activeChat;
+    oldActiveChat.recipientTyping = true;
+    this.setState({ activeChat: oldActiveChat });
+  } else if (this.state.activeChat) {
+    let oldActiveChat = this.state.activeChat;
+    oldActiveChat.recipientTyping = false;
+    this.setState({ activeChat: oldActiveChat });
+  }
+}
+
 const exports = {
   user: userListener,
   auth: authListener,
   newMessage: newMessageListener,
   messageUpdate: messageUpdateListener,
-  chatPreview: chatPreviewListener
+  chatPreview: chatPreviewListener,
+  typingChanged: typingChangedListener
 }
 
 export default exports;

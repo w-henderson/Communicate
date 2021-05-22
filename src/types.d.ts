@@ -21,6 +21,7 @@ interface Chat {
 
 interface FullChat {
   recipient: User,
+  recipientTyping: boolean,
   id: string,
   messages: UserMessage[]
 }
