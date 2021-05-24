@@ -1,8 +1,7 @@
 import React from "react";
 import "./styles/App.scss";
-import googleSignInButton from './images/google_sign_in.png';
-import githubSignInButton from './images/github_sign_in.png';
 
+import Landing from "./landing/Landing";
 import Menu from './components/Menu';
 import ConversationHeader from './components/ConversationHeader';
 import Conversation from './components/Conversation';
@@ -247,10 +246,7 @@ class App extends React.Component<{}, AppState> {
       );
     } else if (this.state !== null && this.state.firebase.user === null) {
       return (
-        <div className="SignIn">
-          <img src={googleSignInButton} alt="Sign in with Google" onClick={() => this.signIn("Google")} draggable={false} />
-          <img src={githubSignInButton} alt="Sign in with GitHub" onClick={() => this.signIn("GitHub")} draggable={false} />
-        </div>
+        <Landing callback={this.signIn} />
       )
     } else {
       return (
