@@ -82,15 +82,6 @@ class Landing extends React.Component<LandingProps> {
         </section>
       </div>
     )
-
-    /*
-    return (
-      <div className="SignIn">
-        <img src={googleSignInButton} alt="Sign in with Google" onClick={() => this.props.callback("Google")} draggable={false} />
-        <img src={githubSignInButton} alt="Sign in with GitHub" onClick={() => this.props.callback("GitHub")} draggable={false} />
-      </div>
-    )
-    */
   }
 }
 
