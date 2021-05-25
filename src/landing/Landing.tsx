@@ -1,8 +1,6 @@
 import React from "react";
 import "../styles/Landing.scss";
 
-import googleSignInButton from '../images/google_sign_in.png';
-import githubSignInButton from '../images/github_sign_in.png';
 import icon from '../images/icon_transparent.png';
 import phoneMockup from '../images/phone_mockup.png';
 
