@@ -15,7 +15,7 @@ div.Landing {
     box-shadow: var(--shadow-heavy);
     color: white;
     text-shadow: var(--shadow-light);
-    font-size: 1.8em;
+    font-size: 1.5em;
     font-weight: 800;
 
     img {
@@ -57,6 +57,7 @@ div.Landing {
     flex-direction: row;
     flex-wrap: wrap;
     row-gap: 6vh;
+    background: linear-gradient(to top left, var(--accent-light), var(--accent));
 
     div.heroContent {
       display: flex;
@@ -128,16 +129,52 @@ div.Landing {
     }
   }
 
-  section:not(.hero) {}
+  section:not(.hero) {
+    width: 100%;
+    color: var(--text-color);
+    background-color: var(--lightest);
+    padding: 128px 20vw;
+    font-size: 1.2em;
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 1.8em;
+      color: var(--accent);
+      text-shadow: var(--shadow-wide);
+    }
+
+    &:nth-of-type(2n-1) {
+      background-color: var(--light);
+    }
+  }
+
+  ul {
+    list-style: none; /* Remove default bullets */
+
+    li::before {
+      content: "\2022";  /* Add content: \2022 is the CSS Code/unicode for a bullet */
+      color: var(--accent); /* Change the color */
+      font-weight: 800; /* If you want it to be bold */
+      transform: scale(1.5);
+      display: inline-block; /* Needed to add space between the bullet and the text */
+      width: 1em; /* Also needed for space (tweak if needed) */
+      margin-left: -1em; /* Also needed for space (tweak if needed) */
+    }
+  }
 }
 
 @media only screen and (max-width: 600px) {
   div.Landing {
-    font-size: 3vw;
+    font-size: 3.5vw;
 
     nav div div {
       width: 11vw;
       height: 11vw;
+    }
+
+    section:not(.hero) {
+      padding: 64px;
     }
   }
 }
