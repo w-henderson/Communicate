@@ -1,5 +1,5 @@
-<p align="center">
-    <img width=400 src="src/images/mockup_compressed.png" style="margin-bottom:24px"><br>
+<br><p align="center">
+    <img width=400 src="src/images/mockup_compressed.png" style="margin-bottom:24px"><br><br>
     <img src="https://img.shields.io/badge/framework-react-2B7489?style=for-the-badge" style="margin-right:5px">
     <img src="https://img.shields.io/badge/backend-firebase-ED7E0C?style=for-the-badge" style="margin-right:5px">
     <img src="https://img.shields.io/badge/styling-sass-C6538C?style=for-the-badge" style="margin-right:5px">
