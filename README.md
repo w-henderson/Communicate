@@ -6,7 +6,7 @@
 </p>
 
 # Communicate
-Communicate a simple and intuitive chat app, providing an easy way to stay in touch with friends, family and anyone else. It has a modern and stylish interface, a reliable and secure Google-provided back-end, and is built using the latest web technologies. Whether you're planning a trip with your friends, or organising a project with your colleagues, Communicate connects you together to help you get stuff done. You can use Communicate now at [communicate.ga](https://communicate.ga).
+Communicate a simple and intuitive chat app, providing an easy way to stay in touch with friends, family and anyone else. It has a modern and stylish interface, a reliable and secure Google-provided back-end, and is built using the latest web technologies. Whether you're planning a trip with your friends, or organising a project with your colleagues, Communicate connects you together to help you get stuff done. You can use Communicate now at [communicate.whenderson.dev](https://communicate.whenderson.dev).
 
 ## Features
 Communicate offers everything you need to keep in touch, including:
